@@ -1,6 +1,6 @@
 ### **系统环境变量：**
 
-PET\_USER\_IMAGES：用户的图片的存储路径
+GET\_USER\_IMAGES：用户的图片的存储路径
 
 ### API：
 
