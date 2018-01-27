@@ -9,6 +9,6 @@ def create_app(config_name):
 
     #Buleprint
     from .api import API
-    app.register_buleprint (API)
+    app.register_blueprint (API)
 
     return app
