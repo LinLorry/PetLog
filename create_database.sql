@@ -2,7 +2,7 @@ USE PetShow
 
 CREATE TABLE users
 (
-id CHAR(16) NOT NULL,
+id CHAR(16) NOT NULL, 
 user_name VARCHAR(20) NOT NULL,
 user_nickname VARCHAR(20) NOT NULL,
 password_hash CHAR(128) NOT NULL,
@@ -29,6 +29,7 @@ CREATE TABLE cards
 (
 id CHAR(16) NOT NULL,
 user_id CHAR(16) NOT NULL,
+pet_id CHAR(16) NOT NULL,
 card_content text NULL,
 card_image_path VARCHAR(128) NULL,
 card_time datetime NOT NULL,
@@ -41,6 +42,7 @@ CREATE TABLE card_with_tag
 (
 card_id CHAR(16) NOT NULL,
 id CHAR(16) NOT NULL,
+tag_id CHAR(16) NOT NULL,
 
 PRIMARY KEY (id),
 CONSTRAINT c_id FOREIGN KEY (id) REFERENCES cards(id)
@@ -84,8 +86,15 @@ PRIMARY KEY (pet_id),
 CONSTRAINT upet_id FOREIGN KEY (user_id) REFERENCES users(id)
 )ENGINE=InnoDB;
 
+CREATE TABLE follow
+(
+user_id CHAR(16) NOT NULL,
+id CHAR(16) NOT NULL,
+be_concerned_id CHAR(16) NOT NULL,
 
-
+PRIMARY KEY(id),
+CONSTRAINT uf_id FOREIGN KEY(user_id) REFERENCES users(id)
+)ENGINE=InnoDB;
 
 
 
