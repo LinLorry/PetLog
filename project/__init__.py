@@ -9,7 +9,8 @@ def create_app(config_name):
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     app.config['SECRET_KEY'] = os.getenv("PETSHOW_SECRET_KEY")
-
+    app.config['CARD_IMAGES_FOLDER'] = os.getenv("PETSHOW_CARD_IMAGES")
+    
     #Buleprint
     from .Test import Test_blueprint
     from .Api import API_blueprint
