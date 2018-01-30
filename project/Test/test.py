@@ -4,7 +4,7 @@ from flask import request,send_from_directory
 from werkzeug import secure_filename
 import os
 from flask_restful import Resource
-
+from project.extra import login_required
 #上传文件的限制格式
 ALLOWED_EXTENSIONS = set (['jpg','png','jpeg'])
 
@@ -15,6 +15,7 @@ def allowed_file(filename):
 
 class test(Resource):
 
+    @login_required
     def post(self):
         file = request.files['image']
         if file and allowed_file(file.filename):
@@ -26,7 +27,7 @@ class test(Resource):
             #文件上传成功，返回文件名
             return filename
         #没有文件或文件格式不是允许的文件格式，返回"f",失败
-        return "failure"
+        return jsonify(status = 0,message = "failed")
 
 
 ''' from . import API '''
