@@ -1,18 +1,30 @@
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from flask import current_app,g
+import random
+import time
+import hashlib
 
 #用户模块
-class User:
+class User(db.Model):
     #tablename is 'users'
     __tablename__ = 'users'
+    _id = db.Column(db.String(16),primary_key=True,nullable=False)
+    user_name = db.Column(db.String(20),unique=True,nullable=False)
+    user_nickname = db.Column(db.String(20),unique=True,nullable=False)
+    password_hash = db.Column(db.String(128),nullable=False)
+    phonenumber = db.Column(db.String(11),unique=True,nullable=False)
+    gender = db.Column(db.String(1),nullable=True)
+    head_portrait_path = db.Column(db.String(128),nullable=True)
+    motto = db.Column(db.String(256),nullable=True)
+    address = db.Column(db.String(30),nullable=True)
+    joined_time = db.Column(db.Datetime,nullable=False,default=datetime.now)
+    grade = db.Column(db.Integer,nullable=False,default=1)
+
     #user_id is 16 characters
-    __user_id = '123456789ABCDEF'
-    __image_number = 0
-        
+#    __user_id = '123456789ABCDEF'
+
     def __init__(self,username):
         self.__user_name = username
-        self.password = username
 
     #为password加上修饰器@property
     @property
@@ -25,7 +37,7 @@ class User:
     
     #校验密码方法
     def verify_password(self, password):
-        return pwd_context.verify(password,self.password_hash)
+        return pwd_context.verify(self.password_hash, password)
     
     #返回用户的名字的方法
     def get_user_name (self):
@@ -35,33 +47,50 @@ class User:
     def get_user_id (self):
         return self.__user_id
     
-    #获取用户上传图片数的方法
-    def get_image_number(self):
-        return self.__image_number
-    
     #获取token的方法，默认时间是10分钟(10*60秒)
     def generate_auth_token(self, expiration = 600):
-        s = Serializer(current_app.config['SECRET_KEY'],expires_in = expiration)
-        return s.dumps({ 'id': self.get_user_id() ,\
-                        'username':self.get_user_name()})
+        s = Serializer("ssss",expires_in = expiration)
+	return s.dumps({ 'id': self.id })
 
-    #插入卡片数据的方法
-    def create_card(self,card_dict):
+    #添加该用户宠物信息的方法
+    def create_pet(user_id):
+	
+	str1 = user._id
+	str2 = time.time()
+	str3 = "new pet"
+	str4 = str1+str(str2)+str3
+	raw = hashlib.md5()
+	raw.update(str4.encode("utf8"))
+	result = raw.hexdigest()[8:-8]
+	return result
 
-        str1 = g.user.get_user_name()
-        str2 = card_dict['time']
-        ss = str1 + str2
-        card_id = pwd_context.encrypt(ss)[8:-8]
+    #添加新用户时生成id的方法
+    def create_user(user_name):
 
-        #插入卡片数据
-        return "success"
+	str1 = user_name
+    str2 = time.time()
+	str3 = "new people"
+    str4 = str1+str(str2)+str3
+	raw = hashlib.md5()
+	raw.update(str4.encode("utf8"))
+	result = raw.hexdigest()[8:-8]
+	return result
 
-    def create_user(self,user_dict):
+    #某用户发出卡片时生成id的方法
+    def create_card(user_id):
+	
+	str1 = user_id
+    str2 = time.time()
+	str3 = "new card"
+	str4 = str1+str(str2)+str3
+	raw = hashlib.md5()
+	raw.update(str4.encode("utf8")
+	result = raw.hexdigest()[8:-8]
+	return result
 
-        str1 = user_dict['username']
-        str2 = user_dict['joined_time']
-        ss = str1 + str2
-        self.__user_id = pwd_context.encrypt(ss)[8:-8]
-        password = user_dict['password']
+    #计算用户当前等级的方法
+    def grade_now(grade,user_id,comment_number,praise_number)
+	#具体计算待定
+	return grade
 
-        return True
+    #
