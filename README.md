@@ -1,20 +1,86 @@
 ### **系统环境变量：**
 
-GET\_USER\_IMAGES：用户的图片的存储路径
+PETSHOW\_SECRET\_KEY:密钥
+
+PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
 
 ### API：
 
-#### 1.host:5000/api/postimage                             methods:"POST","GET"
+#### 1.url:host:5000/api/postimage                             methods:"POST"
 
-get:无意义返回值
+##### params:
 
-post:文件上传，文件格式限制为"jpg","jpeg","png"
+{
 
-#### 2.host:5000/api/getimage/&lt;filename&gt;          methods:"GET"
+```
+"username":username,str,
 
-filename:文件名
+"password":password,str
+```
 
-get:获取文件
+}
 
+##### return:
 
+{
+
+```
+header.Authorization:token
+```
+
+}
+
+#### 2.url:host:5000/api/Upload/card\_images         methods:"POST"
+
+##### success return:
+
+{
+
+```
+"status":1,
+
+"filename":filename,str
+```
+
+}
+
+##### failed return:
+
+{
+
+```
+"status":0,
+
+"message":"failed"
+```
+
+}
+
+### 3.url:host:5000/user/Post\_card            methods:"POST"
+
+##### params:
+
+```
+"conntent":Text\[:any\],
+
+"images":Array\[:text\],
+
+"tags":Array\[:text\],
+
+"time":\[:"YYYY年\(M\)M月DD日 hh:mm"\]
+```
+
+}
+
+##### return: 
+
+{
+
+```
+"status":1,
+
+"message":"success"
+```
+
+}
 
