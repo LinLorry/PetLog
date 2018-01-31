@@ -60,6 +60,7 @@ PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
 ### 3.url:host:5000/api/Post\_card            methods:"POST"
 
 ##### params:
+{
 
 ```
 "conntent":Text\[:any\],
@@ -69,6 +70,8 @@ PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
 "tags":Array\[:text\],
 
 "time":\[:"YYYY年\(M\)M月DD日 hh:mm"\]
+
+"status":pet_status\[:int\]
 ```
 
 }
