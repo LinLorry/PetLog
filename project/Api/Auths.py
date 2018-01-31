@@ -9,8 +9,6 @@ class auth(Resource):
         
         if user.verify_password(request.json.get('password')):
             g.user = user
-            rst = make_response() 
-            rst.headers['Authorization'] = g.user.generate_auth_token()
-            return rst
+            return jsonify(status = 1,token = g.user.generate_auth_token())
         else:
             return jsonify(status = 0,message = "failed")

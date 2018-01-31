@@ -6,7 +6,7 @@ PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
 
 ### API：
 
-#### 1.url:host:5000/api/postimage                             methods:"POST"
+#### 1.url:host:5000/api/Login                             methods:"POST"
 
 ##### params:
 
@@ -25,7 +25,8 @@ PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
 {
 
 ```
-header.Authorization:token
+"status":1
+"token":token,str
 ```
 
 }
@@ -56,7 +57,7 @@ header.Authorization:token
 
 }
 
-### 3.url:host:5000/user/Post\_card            methods:"POST"
+### 3.url:host:5000/api/Post\_card            methods:"POST"
 
 ##### params:
 
