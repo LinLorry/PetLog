@@ -3,6 +3,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import random
 import time
 import uuid
+from . import db
 
 #关于这个库，上面的itsdangerous的使用时差不多效果的，所以就使用上面那个了
 ''' import hashlib '''
@@ -65,8 +66,8 @@ class User(db.Model):
         self.set_phonenumber(user_dict)
         self.set_motto(user_dict)
         #......
-
-    	''' str1 = user_name
+        
+        ''' str1 = user_name
         str2 = time.time()
 	    str3 = "new people"
         str4 = str1+str(str2)+str3
@@ -76,7 +77,7 @@ class User(db.Model):
 
         #插入数据的操作......
 
-	    return True
+        return True
 
     
     class __card(db.Model):
@@ -94,7 +95,7 @@ class User(db.Model):
             #卡片id的生成
             self.__id = uuid.uuid1()
 
-	        ''' str1 = user_id
+            ''' str1 = user_id
             str2 = time.time()
 	        str3 = "new card"
 	        str4 = str1+str(str2)+str3
@@ -214,6 +215,6 @@ class User(db.Model):
         return True
 
     #计算用户当前等级的方法
-    def grade_now(self,grade,user_id,comment_number,praise_number)
+    def grade_now(self,grade,user_id,comment_number,praise_number):
 	    #具体计算待定
 	    return grade
