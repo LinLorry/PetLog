@@ -10,18 +10,35 @@ class post_card(Resource):
     def post(self):
         card_dict = request.json
 
+        try:
+            card_dict['content']
+            card_dict['images']
+            card_dict['time']
+        except KeyError:
+            jsonify(status = 0,message = "error!!please don't try to do someting wrong")
+        except:
+            jsonify(status = 0,message = "look like something wrong happen")
+        
         #内容和图片不能同时没有
-        if not card_dict['content'] and \
-            not card_dict['images']:
+        if card_dict['content'] is "" and \
+            card_dict['images'] is "":
             return jsonify(status = 0,\
                 message = "content and image can't exist at the same time.")
+        
         #动态发布一定要有时间
-        elif not card_dict['time']:
+        if card_dict['time'] is "":
             return jsonify(status = 0,\
                 message = "card must has time")
         else:
-            g.user.create_card(request.json)
-            return jsonify(status = 1,\
+            g.user.create_card(card_dict)
+        
+        #用于调试查看的
+        print ("content:%s,images:" % \
+            (card_dict['content']),\
+            card_dict['images'],"tags:",\
+            card_dict['tags'])
+        
+        return jsonify(status = 1,\
                 message = "success")
 
 class user_get_card(Resource):
