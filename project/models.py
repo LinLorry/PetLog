@@ -5,6 +5,13 @@ import time
 import uuid
 from . import db
 
+#使用session进行数据库操作
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+engine= create_engine('mysql://username:password@localhost/')
+Session = sessionmaker(bind=engine)
+session = Session()
+
 #关于这个库，上面的itsdangerous的使用时差不多效果的，所以就使用上面那个了
 ''' import hashlib '''
 
@@ -18,12 +25,11 @@ class User(db.Model):
     __tablename__ = 'users'
     #限制变量的访问，加"__"
     __id = db.Column(db.String(16),primary_key=True,nullable=False)
-    __user_name = db.Column(db.String(20),unique=True,nullable=False)
     __user_nickname = db.Column(db.String(20),unique=True,nullable=False)
     __password_hash = db.Column(db.String(128),nullable=False)
     __phonenumber = db.Column(db.String(11),unique=True,nullable=False)
     __gender = db.Column(db.String(1),nullable=True)
-    __head_portrait_path = db.Column(db.String(128),nullable=True)
+    __avatar_path = db.Column(db.String(128),nullable=True)
     __motto = db.Column(db.String(256),nullable=True)
     __address = db.Column(db.String(30),nullable=True)
     __joined_time = db.Column(db.Datetime,nullable=False,default=datetime.now)
@@ -48,8 +54,6 @@ class User(db.Model):
     #参数是用户信息得到字典
     def __init__(self,user_dict):
 
-        
-        
         #生产用户的唯一id
         self.__id = uuid.uuid1()
         #用户生成的时间，姑且先用时间戳的形式存着，不知道后面会不会用到
@@ -75,19 +79,22 @@ class User(db.Model):
 	    raw.update(str4.encode("utf8"))
 	    result = raw.hexdigest()[8:-8] '''
 
-        #插入数据的操作......
-
+        #插入数据的操作
+	session.add(self)
+	session.commit()
+        sesion.close()
         return True
 
     
     class __card(db.Model):
         #用户的私有类:卡片
         #还没完善,插入的方法还没有......
-
+	
         #用于用户查找他的卡片的方法
         def __init__(self,user_name):
-            #这里应该是用用户名去查找表中的user_id ，然后再赋值给user_id
-            self.__user_id = user_name
+            #这里应该是用用户名去查找表中的user_id ，然后再赋值给user_id~
+             the_id = session.query(User.user_id).filter_by(user_name=user_name)
+	     self.__user_id = the_id
 
         #创造用户卡片的方法
         def __init__(self,content,images,tags):
@@ -107,7 +114,10 @@ class User(db.Model):
             self.__images = images
             self.__tags = tags
             self.__time = time.time()
-
+	    #内容记录进数据库
+	    session.add(self)
+	    session.commint()
+            session.close()
         #def insert(self):......
 
     class Pet(db.Model):
@@ -115,13 +125,26 @@ class User(db.Model):
 
         #宠物的构造函数，用于查找一个宠物
         def __init__(self,pet_name):
-            self.__pet_anme = pet_name
+	    it = session.query(Pet.pet_id).filter_by(pet_name==pet_name)
+	    if it is not none:
+                that =[]
+		for pet in it:
+		    that.append(pet)
+        #可能出现同名要返回列表。（待修改）
 
         #宠物的构造函数，用于查找一个用户的宠物
         def __init__(self,user_name,pet_name):
             #这里应该是用用户名去查找表中的user_id ，然后再赋值给user_id
             self.__user_id = user_name
             self.__pet_anme = pet_name
+		
+	    pet_zr_id = session.query(User.user_id).filter_by(user_name==user_name)
+            pet_id = session.query(Pet.pet_id).filter_by(user_id==user_id)
+            pet_list = []
+	    for pet in pet_id:
+       		 pet_list.append(pet)
+            return pet_list 
+            #暂时返回宠物的id
 
         #宠物的构造函数,用于创建一个宠物
         #pet_dict时一个包含宠物信息的字典
@@ -136,7 +159,7 @@ class User(db.Model):
 
             #宠物唯一id的生成
             #新方法
-            self.__id = uuid.uuid1()
+            self.__pet_id = uuid.uuid1()
             #旧方法
             ''' str1 = self.__id
             str2 = time.time()
@@ -145,7 +168,13 @@ class User(db.Model):
 	        raw = hashlib.md5()
 	        raw.update(str4.encode("utf8"))
 	        result = raw.hexdigest()[8:-8] '''
-
+ 	    self.__category = category
+            self.__pet_name = pet_name
+            self.__user_id = user_id
+            self.__gender = gender
+            session.add(self)
+            session.commit()
+            session.close()
     
     #为password加上修饰器@property
     @property
@@ -218,3 +247,4 @@ class User(db.Model):
     def grade_now(self,grade,user_id,comment_number,praise_number):
 	    #具体计算待定
 	    return grade
+
