@@ -6,11 +6,11 @@ from project.extra import login_required
 class auth(Resource):
     def post(self):
         #创建用户对象
-        user = User(request.json.get('username'))
+        user = User(information_dict = request.json)
         
         if user.verify_password(request.json.get('password')):
             g.user = user
-            return jsonify(status = 1,token = g.user.generate_auth_token())
+            return jsonify(status = 1,token = g.user.generate_auth_token().decode("utf8"))
         else:
             return jsonify(status = 0,message = "failed")
 

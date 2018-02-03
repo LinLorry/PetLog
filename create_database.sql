@@ -3,10 +3,10 @@ USE PetShow
 CREATE TABLE users
 (
 id CHAR(16) NOT NULL, 
-user_name VARCHAR(20) NOT NULL,
 user_nickname VARCHAR(20) NOT NULL,
 password_hash CHAR(128) NOT NULL,
 phonenumber CHAR(11) NULL,
+email CHAR(32) NULL,
 gender CHAR(1) NULL,
 head_portrait_path VARCHAR(128) NULL,
 motto VARCHAR(256) NULL,
@@ -42,7 +42,7 @@ CREATE TABLE card_with_tag
 (
 card_id CHAR(16) NOT NULL,
 id CHAR(16) NOT NULL,
-tag_id CHAR(16) NOT NULL,
+tag CHAR(16) NOT NULL,
 
 PRIMARY KEY (id),
 CONSTRAINT c_id FOREIGN KEY (id) REFERENCES cards(id)

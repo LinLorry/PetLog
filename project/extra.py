@@ -16,7 +16,7 @@ def login_required(func):
                 return None # valid token, but expired
             except BadSignature:
                 return None # invalid token
-            g.user = User(data['username'])
+            g.user = User(information_dict = data)
             return True
 
         token = request.headers.get("Authorization")

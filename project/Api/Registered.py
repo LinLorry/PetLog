@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import jsonify.request
+from flask import jsonify,request
 from project.models import User
 
 class registered(Resource):
@@ -7,20 +7,34 @@ class registered(Resource):
         try:
             user_dict = request.json
             
-            user_dict['username']
+            user_dict['phonenumber']
             user_dict['user_nickname']
             user_dict['password']
-            
-            user = User(user_dict) 
+
+            if not (user_dict['phonenumber'].strip() or \
+                user_dict['email'].strip()) or \
+                not user_dict['user_nickname'].strip() or \
+                not user_dict['password'].strip():
+                
+                return jsonify(status = 0,message = "error!!")
+
         except KeyError:
-            jsonify(status = 0,message = "error!!please don't try to do someting wrong")
+            return jsonify(status = 0,message = "error!!please don't try to do someting wrong")
+        except AttributeError:
+            return jsonify(status = 0,message = "error!!please don't try to do someting wrong")
         except:
-            jsonify(status = 0,message = "look like something wrong happen")
-        
+            return jsonify(status = 0,message = "look like something wrong happen")
+
         #用于调试查看的
-        print ("username:%s,user_nickname:%s,password:%s"  %  (\
-                user_dict['username'],
+        print ("phonenumber:%s,user_nickname:%s,password:%s"  %  (\
+                user_dict['phonenumber'],
                 user_dict['user_nickname'],
                 user_dict['password'])  )
+
+        try:
+            user = User(create_dict = user_dict)
+        except:
+            return jsonify(status = 0,message = "look like something wrong happen")
+
         
-        return jsonify(status = 1, message = 1)
+        return jsonify(status = 1, message = "success")
