@@ -25,8 +25,7 @@ session = Session() '''
 #现在先优先完成用户的注册方法和卡片的创造方法
 class User(db.Model):
     #tablename is 'users'
-    __tablename__ = 'users'
-    #限制变量的访问，加"__"
+    __tablename__ = "users"
     __id = db.Column(db.String(16),primary_key=True,nullable=False)
     __user_nickname = db.Column(db.String(20),unique=True,nullable=False)
     __password_hash = db.Column(db.String(128),nullable=False)
@@ -35,35 +34,39 @@ class User(db.Model):
     __avatar_path = db.Column(db.String(128),nullable=True)
     __motto = db.Column(db.String(256),nullable=True)
     __address = db.Column(db.String(30),nullable=True)
-    __joined_time = db.Column(db.DateTime,nullable=False,default=datetime.utcnow())
+    __joined_time = db.Column(db.DateTime,nullable=False)
     __grade = db.Column(db.Integer,nullable=False,default=1)
-
     #构造函数
     #接口使用的时候要通过这个确定用户
     #information_dict是查找用户提供的信息字典
     #create_dict是创造用户提供的信息字典
     def __init__(self,information_dict = None,create_dict = None):
-        if create_dict:
-            #生产用户的唯一id
-            self.__id = uuid.uuid1()
+        pass
 
-            #对于必须拥有的变量调用赋值即可
-            self.__phonenumber = create_dict['phonenumber']
-            self.__user_nickname = create_dict['user_nickname']
-            self.password = create_dict['password']
+    def create_user(self,create_dict):
+        #生产用户的唯一id
+        self.__id = uuid.uuid1()
+
+        #对于必须拥有的变量调用赋值即可
+        self.__phonenumber = create_dict['phonenumber']
+        self.__user_nickname = create_dict['user_nickname']
+        self.password = create_dict['password']
+    
+        #对于不一定拥有的变量调用set设置器
+        #有些设置器还未写,需要补充
+        self.set_user_gender(create_dict['gender'])
+        self.set_motto(create_dict['motto'])
+
+    def select(self,user_dict):
+        #调试用
+        self.__id = user_dict['id']
+        self.password = user_dict['id']
         
-            #对于不一定拥有的变量调用set设置器
-            #有些设置器还未写,需要补充
-            self.set_user_gender(create_dict['gender'])
-            self.set_motto(create_dict['motto'])
-            #......
-        else:
-            self.__user_name = information_dict['username']
-            #这个是为了测试，所以将密码设置的和用户名一样
-            self.password = information_dict['username']
+    def create_card(self,card_dict):
+        card = Card()
+        card.create_card(card_dict)
+        return True
 
-        #根据username 或者 id 初始化一个用户对象......
- 
     #为password加上修饰器@property
     @property
     def password(self):
@@ -101,7 +104,6 @@ class User(db.Model):
             self.__gender = user_gender
         return True
 
-    #设置用户的电话号码
     def set_motto (self,user_motto):
         if user_motto == '':
             self.__motto = None
@@ -116,56 +118,34 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'],\
                     expires_in = expiration)
         return s.dumps({ 'id': self.__id ,\
-                        'username':self.__user_name})
-
-    #用户创造卡片的方法
-    def create_card(self,create_dict):
-        #创造卡片对象
-        create_dict['user_id'] = self
-        card = Card(create_dict=create_dict)
-        card.insert()
-
-        return True
-
-    def create_pet(self,create_pet):
-        create_pet['user_id'] = self
-        pet = Pet(create_dict = create_pet)
-        #pet.insert()
-
-        return True
+                        'phonenumber':self.__phonenumber})
 
     #计算用户当前等级的方法
     def grade_now(self,grade,user_id,comment_number,praise_number):
 	    #具体计算待定
 	    return grade
 
-class Card():
+class Card(db.Model):
+    """card model"""
     __tablename__ = "cards"
-    #卡片
-    #还没完善,插入的方法还没有......
-	
-    ''' __id = db.Column()
-    __content = db.Column()
-    __time = db.Column()
-    __images = db.Column() '''
-
-    ''' user_id = db.Column() '''
+    __id = db.Column(db.String(16),primary_key= True,nullable=False)
+    __user_id = db.Column(db.String(16),nullable=False)
+    __pet_id = db.Column(db.String(16),nullable=False)
+    __card_content = db.Column(db.Text,nullable=True)
+    __card_image_path = db.Column(db.String(128),nullable=True)
+    __card_time = db.Column(db.DateTime,nullable=False)
 
     #用于用户查找他的卡片的方法
     def __init__(self,card_dict = None,create_dict = None):
-        #这块搞错了，
-        ''' #这里应该是用用户名去查找表中的user_id ，然后再赋值给user_id~
-        the_id = session.query(User.user_id).filter_by(user_name=user_name)
-        self.__user_id = the_id '''
-        if create_dict:
-            self.__id = uuid.uuid1()
-            self.__content = create_dict['content']
-            self.__images = create_dict['images']
-            self.__tags = create_dict['tags']
-            #self.__user_id = create_dict['user_id']                    
-        else:
-            #这块是按照卡片id查找卡片并初始化一个卡片对象的方法
-            pass
+        pass
+
+    def create_card(self,create_dict):
+        #创造卡片对象
+        self.__id = uuid.uuid1()
+        self.__content = create_dict['content']
+        self.__images = create_dict['images']
+        self.__tags = create_dict['tags']
+        pass
 
     def insert(self):
         #内容记录进数据库
@@ -173,26 +153,45 @@ class Card():
         db.session.commint()
         #session.close()
 
-class Pet():
-    #宠物
+class Pet(db.Model):
+    __tablename__ = "pets"
+    __pet_id = db.Column(db.String(16),nullable=False,primary_key=True)
+    __category = db.Column(db.String(32),nullable=False)
+    __detailed_category = db.Column(db.String(64),nullable=True)
+    __pet_name = db.Column(db.String(20),nullable=False)
+    __user_id = db.Column(db.String(16),nullable=False)
+    __time = db.Column(db.DateTime,nullable=False)
+    __gender = db.Column(db.String(1),nullable=False)
 
     #宠物的构造函数，用于查找一个宠物
     def __init__(self,pet_dict = None,create_dict = None):
-        if create_dict:
-            #宠物唯一id的生成
-            self.__pet_id = uuid.uuid1()
-            self.__category = create_dict['category']
-            self.__pet_name = create_dict['pet_name']
-            self.__user_id = create_dict['user_id']
-            self.__gender = create_dict['gender']
-        elif pet_dict['user_phonenumber']:
-            pass
-        else:
-            pass
+        pass
+
+    def create_pet(self,create_dict):
+        #宠物唯一id的生成
+        self.__pet_id = uuid.uuid1()
+        self.__category = create_dict['category']
+        self.__pet_name = create_dict['pet_name']
+        self.__user_id = create_dict['user_id']
+        self.__gender = create_dict['gender']
+        pass
 
     def insert(self):
         #内容记录进数据库
         db.session.add(self)
         db.session.commint()
         #session.close()
+''' 
+class Tag(db.Model):
+    __tablename__ ="tags"
+    __id = db.Column(db.String(16),nullable=False)
+    __tag_name = db.Column(db.String(32),nullable=False)
+
+class Card_with_tag(db.Model):
+    __tablename__ = "card_with_tag"
+    __id = db.Column(db.String(16),nullable=False)
+    __card_id = db.Column(db.String(16),nullable=False)
+    __tag_id = db.Column(db.String(16),nullable=False) '''
+
+    
                 

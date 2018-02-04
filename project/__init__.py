@@ -1,8 +1,10 @@
 from flask import Flask,Blueprint
 import os
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 
 db = SQLAlchemy()
+mail = Mail()
 
 #参数config_name还没完成
 def create_app(config_name):
@@ -25,8 +27,19 @@ def create_app(config_name):
         from .Api import API_blueprint
         app.register_blueprint (API_blueprint,url_prefix='/api')
     
+    #email
+    app.config['MAIL_SERVER'] = 'smtp.163.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = os.environ.get('PETSHOW_MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('PETSHOW_MAIL_PASSWORD')
+    app.config['MAIL_SUBJECT_PREFIX'] = '[PetShow]'
+    app.config['MAIL_SENDER'] = 'PetShow Admin <PetShow@example.com>'  
+    mail.init_app(app)
+
     #max post 最大上传文件大小16MB
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     db.init_app(app)
     
