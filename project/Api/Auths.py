@@ -6,7 +6,8 @@ from project.extra import login_required
 class auth(Resource):
     def post(self):
         #创建用户对象
-        user = User(information_dict = request.json)
+        user = User()
+        user.select(request.json)
         
         if user.verify_password(request.json.get('password')):
             g.user = user

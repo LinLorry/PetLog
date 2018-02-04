@@ -1,8 +1,11 @@
-from flask import request,abort,current_app,g,jsonify
+import random
+from flask import request,abort,current_app,g,jsonify,render_template
 from functools import wraps
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired,BadSignature
 from .models import User
+from flask_mail import Message
+from . import mail
 
 def login_required(func):
     @wraps(func)
@@ -16,7 +19,8 @@ def login_required(func):
                 return None # valid token, but expired
             except BadSignature:
                 return None # invalid token
-            g.user = User(information_dict = data)
+            g.user = User()
+            g.user.select(data)
             return True
 
         token = request.headers.get("Authorization")
@@ -29,3 +33,9 @@ def login_required(func):
             else:
                 return jsonify(status = 0,message = "failed")
     return inner
+
+def send_email(to_mail):
+    msg  = Message("Hello",recipients = to_mail)
+    code = ''.join(random.sample([chr(i) for i in range(65,91)],5))
+    msg.html = render_template("./static/mail.html",code = code)
+    mail.send(msg)
