@@ -1,7 +1,5 @@
-
 import pymysql
 pymysql.install_as_MySQLdb()
-
 
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -12,17 +10,8 @@ import uuid
 from . import db
 from flask import current_app,g
 
-''' #使用session进行数据库操作
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-#db ?= engine
-engine= create_engine('mysql://username:password@localhost/')
-Session = sessionmaker(bind=engine)
-session = Session() '''
-
 #用户模块
-#现在先优先完成用户的注册方法和卡片的创造方法
+#现在先优先完成用户的注册方法和卡片的创造方法(- - ）
 class User(db.Model):
     #tablename is 'users'
     __tablename__ = "users"
@@ -66,8 +55,7 @@ class User(db.Model):
         card = Card()
         card.create_card(card_dict)
         return True
-
-    #为password加上修饰器@property
+    
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -133,7 +121,7 @@ class Card(db.Model):
     __pet_id = db.Column(db.String(16),nullable=False)
     __card_content = db.Column(db.Text,nullable=True)
     __card_image_path = db.Column(db.String(128),nullable=True)
-    __card_time = db.Column(db.DateTime,nullable=False)
+    __card_time = db.Column(db.DateTime,nullable=False)   
 
     #用于用户查找他的卡片的方法
     def __init__(self,card_dict = None,create_dict = None):
@@ -153,7 +141,18 @@ class Card(db.Model):
         db.session.commint()
         #session.close()
 
-class Pet(db.Model):
+    def time_card(self,user_id)
+        that = user_all_pet(user_id)
+        num = len(that)
+        for i in range(len(that)):
+            pet = that[i]['id']
+            cards = self.query.filter_by(__pet_id=pet).all()
+            #找到所有该宠物的卡片
+            #之后按照时间排序，分组，返回以一个月为一组的数据。
+            
+	    
+
+class Pet(db.Model):#待补充，宠物头像，以及宠物的介绍
     __tablename__ = "pets"
     __pet_id = db.Column(db.String(16),nullable=False,primary_key=True)
     __category = db.Column(db.String(32),nullable=False)
@@ -173,7 +172,7 @@ class Pet(db.Model):
         self.__category = create_dict['category']
         self.__pet_name = create_dict['pet_name']
         self.__user_id = create_dict['user_id']
-        self.__gender = create_dict['gender']
+        self .__gender = create_dict['gender']
         pass
 
     def insert(self):
@@ -181,17 +180,26 @@ class Pet(db.Model):
         db.session.add(self)
         db.session.commint()
         #session.close()
+
+    def user_all_pet(self,user_id):
+        #时间轴界面下获取某用户所有宠物的id
+        pets = self.query.filter_by(__user_id=user_id).all()
+        all_pet = []
+	for pet in pets:
+             all_pet.append({'id':pet.__pet_id,'name':pet.__pet_name})
+        return all_pet
+        #返回某用户所有的宠物id（以列表套字典的格式返回）例：[{'id':'08980','name':'奥利奥'},{'id':'87389','name':'趣多多'}]  时间轴界面会显示的有关宠物方面的信息（待补充）
+   
+    
+       
 ''' 
 class Tag(db.Model):
     __tablename__ ="tags"
     __id = db.Column(db.String(16),nullable=False)
     __tag_name = db.Column(db.String(32),nullable=False)
-
 class Card_with_tag(db.Model):
     __tablename__ = "card_with_tag"
     __id = db.Column(db.String(16),nullable=False)
     __card_id = db.Column(db.String(16),nullable=False)
     __tag_id = db.Column(db.String(16),nullable=False) '''
 
-    
-                
