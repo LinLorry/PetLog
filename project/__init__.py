@@ -24,7 +24,7 @@ def create_app(config_name):
         app.config['CARD_IMAGES_FOLDER'] = os.getenv("PETSHOW_CARD_IMAGES")
         app.config['SALT'] = os.getenv("PETSHOW_SALT")
         app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("PETSHOW_DATABASE")
-        app.config['REGISER_CODE'] = os.getenv("PETSHOW_REGISER_CODE")
+        app.config['REGISER_CODE'] = os.getenv("PETSHOW_REGISER_KEY")
         #Buleprint
         from .Api import API_blueprint
         app.register_blueprint (API_blueprint,url_prefix='/api')

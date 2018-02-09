@@ -27,7 +27,7 @@ class registered(Resource):
     def verify_code(self,code_dict):
         try:
             str1 = code_dict['email']
-            str2 = current_app.config['REGISER_CODE']
+            str2 = current_app.config['REGISER_KEY']
             str3 = code_dict['password']
 
             src = str1 + str2 + str3

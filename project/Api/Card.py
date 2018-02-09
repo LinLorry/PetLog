@@ -27,7 +27,7 @@ class post_card(Resource):
         else:
             return jsonify(status = 1,message = "success")
 
-class card_comments(Resource):
+class card_comment(Resource):
     @login_required
     def post(self):
         try:
