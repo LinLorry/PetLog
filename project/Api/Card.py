@@ -5,40 +5,37 @@ from flask import request,g,jsonify
 
 class post_card(Resource):
     #发布动态接口
-
     @login_required
     def post(self):
-        card_dict = request.json
-
         try:
-            card_dict['content']
-            card_dict['images']
+            card_dict = g.user.verify_data(request.json,"create_card")
+            g.user.create_card(card_dict)
+            g.user.insert()
 
-            #内容和图片不能同时没有
-            if not (card_dict['content'].strip() or \
+            '''if not (card_dict['content'].strip() or \
                     card_dict['images'].strip()):
                 return jsonify(status = 0,\
                 message = "content and image can't exist at the same time.")
-        
-        except KeyError:
-            return jsonify(status = 0,message = "error!!please don't try to do someting wrong")
-        except AttributeError:
-            return jsonify(status = 0,message = "error!!please don't try to do someting wrong")        
+            '''
+            #用于调试查看的
+            print ("content:%s,images:" % \
+                (card_dict['content']),\
+                card_dict['images'])
         except:
-            return jsonify(status = 0,message = "look like something wrong happen")
+            return jsonify(status =0, \
+                    message = "failed")
+        else:
+            return jsonify(status = 1,message = "success")
 
-        #用于调试查看的
-        print ("content:%s,images:" % \
-            (card_dict['content']),\
-            card_dict['images'])
-
-        try:      
-            g.user.create_card(card_dict)
+class card_comments(Resource):
+    @login_required
+    def post(self):
+        try:
+            comments_dict = request.json
+            
         except:
-            return jsonify(status = 0,message = "look like something wrong happen")
-
-        return jsonify(status = 1,\
-                message = "success")
+            return jsonify(status = 0, \
+                    message = "failes")
 
 class user_get_card(Resource):
     #用户自己的动态获取接口

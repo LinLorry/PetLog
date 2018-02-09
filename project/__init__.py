@@ -15,14 +15,16 @@ def create_app(config_name):
         app.config['SALT'] = "salt"
         app.config['SQLALCHEMY_DATABASE_URI'] = \
                     r"mysql://username:password@hostname/database"
+        app.config['REGISER_CODE'] = "asd"
         from .Api import API_blueprint
-        app.register_blueprint (API_blueprint,url_prefix='/testapi') 
+        app.register_blueprint (API_blueprint,url_prefix='/testapi')
+        
     else:
         app.config['SECRET_KEY'] = os.getenv("PETSHOW_SECRET_KEY")
         app.config['CARD_IMAGES_FOLDER'] = os.getenv("PETSHOW_CARD_IMAGES")
         app.config['SALT'] = os.getenv("PETSHOW_SALT")
         app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("PETSHOW_DATABASE")
-    
+        app.config['REGISER_CODE'] = os.getenv("PETSHOW_REGISER_CODE")
         #Buleprint
         from .Api import API_blueprint
         app.register_blueprint (API_blueprint,url_prefix='/api')

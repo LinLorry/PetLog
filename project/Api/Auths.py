@@ -5,15 +5,19 @@ from project.extra import login_required
 
 class auth(Resource):
     def post(self):
-        #创建用户对象
-        user = User()
-        user.select(request.json)
-        
-        if user.verify_password(request.json.get('password')):
-            g.user = user
-            return jsonify(status = 1,token = g.user.generate_auth_token().decode("utf8"))
-        else:
-            return jsonify(status = 0,message = "failed")
+        try:
+            user = User()
+            user_data = user.verify_data(request.json,"auth")
+            user.select(user_data)
+            if user.verify_password(user_data['password']):
+                return jsonify(status = 1, \
+                        token = user.generate_auth_token().decode("utf8"))
+            else:
+                return jsonify(status = 0, \
+                        message = "failed")
+        except:
+            return jsonify(status =0, \
+                    message = "failed")
 
 class use_auth(Resource):
     @login_required

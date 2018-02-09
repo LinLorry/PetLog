@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 import uuid
 from . import db
+from .extra import PetShow_DataError
 from flask import current_app,g
 
 #用户模块
@@ -55,7 +56,31 @@ class User(db.Model):
         card = Card()
         card.create_card(card_dict)
         return True
+
+    def verify_data(self,data_dict,verify_type):
+        try:
+            if verify_type == "register":
+                #用户必须有邮箱，昵称和密码
+                if not data_dict['email'].strip() or \
+                    not data_['user_nickname'].strip() or \
+                    not data_['password'].strip():
+                    raise PetShow_DataError("one register lack something")
+            elif verify_type == "create_card":
+                #内容和图片不能同时没有
+                if not (card_dict['content'].strip() or \
+                        card_dict['images'].strip()):
+                    print("Error : post card lack something")
+                    raise PetShow_DataError("post card lack something")
     
+        except KeyError as error:
+            print ("Don't has " + error)
+            raise KeyError
+        except PetShow_DataError as e:
+            print(e.message)
+            raise PetShow_DataError
+        else:
+            return True
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')

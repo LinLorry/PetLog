@@ -7,6 +7,11 @@ from .models import User
 from flask_mail import Message
 from . import mail
 
+class PetShow_DataError(Exception):
+    def __init__(self,message):
+        Exception.__init__(self)
+        self.message = message
+
 def login_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
@@ -35,7 +40,7 @@ def login_required(func):
     return inner
 
 def send_email(to_mail):
-    msg  = Message("Hello",recipients = to_mail)
+    msg  = Message("Hello",recipients = [to_mail])
     code = ''.join(random.sample([chr(i) for i in range(65,91)],5))
     msg.html = render_template("./static/mail.html",code = code)
     mail.send(msg)
