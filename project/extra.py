@@ -7,15 +7,22 @@ from .models import User
 from flask_mail import Message
 from . import mail
 
-class PetShow_DataError(Exception):
-    def __init__(self,message):
-        Exception.__init__(self)
-        self.message = message
 
+
+def checke_interface(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except:
+            return jsonify(status = 0,\
+                        message = "failed")
+    return inner
+
+@checke_interface
 def login_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
-
         def verify_auth_token(token):
             s = Serializer(current_app.config['SECRET_KEY'])
             try:
@@ -26,8 +33,9 @@ def login_required(func):
                 return None # invalid token
             g.user = User()
             g.user.select(data)
+            #g.user.find_user(data['email'])
             return True
-
+            
         token = request.headers.get("Authorization")
 
         if not token:
@@ -37,6 +45,9 @@ def login_required(func):
                 return func(*args, **kwargs)
             else:
                 return jsonify(status = 0,message = "failed")
+        
+
+            
     return inner
 
 def send_email(to_mail):

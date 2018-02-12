@@ -1,7 +1,6 @@
 import pymysql
 pymysql.install_as_MySQLdb()
 
-
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import random
@@ -32,40 +31,48 @@ class User(db.Model):
     # information_dict是查找用户提供的信息字典
     # create_dict是创造用户提供的信息字典
 
-    def __init__(self, information_dict=None, create_dict=None):
-        pass
-
     def verify_data(self, data_dict, verify_type):
         try:
+
             if verify_type == "register":
                 # 用户必须有邮箱，昵称和密码
-                if not data_dict['email'].strip() or \
-                        not data_['user_nickname'].strip() or \
-                        not data_['password'].strip():
-                    raise PetShow_DataError("one register lack something")
+                if not data_dict['email'] or \
+                        not data_dict['user_nickname'] or \
+                        not data_dict['password']:
+                    raise PetShow_DataError("Error : One register lack something")
             elif verify_type == "create_card":
                 # 内容和图片不能同时没有
-                if not (card_dict['content'].strip() or
-                        card_dict['images'].strip()):
-                    print("Error : post card lack something")
-                    raise PetShow_DataError("post card lack something")
+                if not (data_dict['content'] or
+                        data_dict['images']) or \
+                    not data_dict['time']:
+                    raise PetShow_DataError("Error : One post card lack something")
+                else:
+                    data_dict['time'] = int(data_dict['time']) * (10 ** -3)
+            elif verify_type == "auth":
+                #验证登陆一定有邮箱和密码
+                if not data_dict['email'] or \
+                    not data_dict['password']:
+                    raise PetShow_DataError("Error : One login lack something")
 
         except KeyError as error:
-            print("Don't has " + error)
+            print("KeyError : Don't has " + error)
             raise KeyError
+
         except PetShow_DataError as e:
             print(e.message)
             raise PetShow_DataError
+
         else:
-            return True
-     #----------------->生成用户的方法
+            return data_dict
+    #----------------->生成用户的方法
     #------>用户注册
+    #上面的方法和这个是一样的用处的
 
     def checke_create(self, create_dict):
         if (create_dict['phonenumber'] is None) or (create_dict['user_nickname'] is None) or (create_dict['password']is None) or (create_dict['email'] is None):
             return "您的信息录入不完全，请检查"
         else:
-            if len(phonenumber) != 11:
+            if len(create_dict['phonenumber']) != 11:
                 return "电话号码格式不正确"
             else:
                 if create_dict['password'] != create_dict['password1']:
@@ -132,22 +139,33 @@ class User(db.Model):
             self.__motto = user_motto
         return True
 
+    #同下面这个一样写一个更新的方法update()
+
     def insert(self):
         db.session.add(self)
         db.session.commit()
     #------****我不大清楚。。
+    #这是查询用户的方法，下面的是我为了测试方便写的，可以不用理
 
     def select(self, user_dict):
         # 调试用
-        self.__id = user_dict['id']
-        self.password = user_dict['id']
+        self.__id = user_dict['email']
+        self.__email = user_dict['email']
+        self.__user_nickname = user_dict['email']
+        self.password = user_dict['email']
 
     #------> 登陆时检验密码是否正确
+    #谔谔，这段emmmm其实不需要的
     def login_check(self, login_dict):
         '''示例：
         login_dict{'phonenumber':'53458745467',
                    'password':'767678222'}'''
-        someone = login_dict['phonenumber']
+        #-------------------------
+        #这里是email吧
+        #someone = login_dict['phonenumber']
+
+
+        someone = login_dict['eamil']
         someone_key = login_dict['password']
         user = self.query.filter_by(__phonenumber=someone).first()
         if user is None:
@@ -176,6 +194,8 @@ class User(db.Model):
         return users  # 由于名称可重复，返回的为同一昵称的用户的id列表
 
     #--------->(查询自身信息,查询某人的详细信息）
+    #像这样的方法需要写多几个，不单是靠id查找，还有email查找等等
+    #这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
     def find_user(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(__id=user_id).first()
         information = {'nickname': info.__user_nickname,
@@ -195,23 +215,22 @@ class User(db.Model):
                 'new_motto': '我没什么好说的，怎么还没完成',
                 'new_address': '江西上饶'}'''
 
-    def update_user(self，update_dict):
+    def update_user(self,update_dict):
         it = self.query.filter_by(__id=update_dict['user']).first()
         it.__gender = update_dict['new_gender']
         it.__avatar_path = update_dict['new_avatar']
         it.__motto = update_dict['new_motto']
         it.__address = update_dict['new_address']
 
-        #---------------------->用户的操作部分
-        #-------------------->用户的卡片部分的操作
+    #---------------------->用户的操作部分
+    #-------------------->用户的卡片部分的操作
     #-------->发布动态
-    '''
 
     def create_card(self, card_dict):
         card = Card()
+        card_dict
         card.create_card(card_dict)
         return True
-    #-------->creat'''
 
     @property
     def password(self):
@@ -222,14 +241,14 @@ class User(db.Model):
     @password.setter
     def password(self, password):
         self.__password_hash = pwd_context.encrypt(password +
-                                                   self.__user_name +
-                                                   current_app.config['SALT'])
+                                                   current_app.config['SALT'] +
+                                                   self.__id)
 
     # 校验密码方法
     def verify_password(self, password):
         return pwd_context.verify(password +
-                                  self.__user_name +
-                                  current_app.config['SALT'],
+                                current_app.config['SALT'] +
+                                self.__id,
                                   self.__password_hash)
 
     # 返回用户的名字的方法
@@ -247,13 +266,12 @@ class User(db.Model):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
         return s.dumps({'id': self.__id,
-                        'phonenumber': self.__phonenumber})
+                        'email': self.__email})
 
     # 计算用户当前等级的方法
     def grade_now(self, grade, user_id, comment_number, praise_number):
             # 具体计算待定
         return grade
-
 
 class Card(db.Model):
     """card model"""
@@ -264,10 +282,6 @@ class Card(db.Model):
     __card_content = db.Column(db.Text, nullable=True)
     __card_image_path = db.Column(db.String(128), nullable=True)
     __card_time = db.Column(db.DateTime, nullable=False)
-
-    # 用于用户查找他的卡片的方法
-    def __init__(self, card_dict=None, create_dict=None):
-        pass
 
     #------>发布动态
 
@@ -295,14 +309,16 @@ class Card(db.Model):
         pass
 
     def set_card_image(self, card_image):
+        pass
 
     def insert(self):
         # 内容记录进数据库
         db.session.add(self)
         db.session.commint()
         # session.close()
+        return True
 
-    def time_card(self, user_id)
+    def time_card(self, user_id):
         that = user_all_pet(user_id)
         num = len(that)
         for i in range(len(that)):
@@ -357,7 +373,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
 class Comment(db.Model):
     __tablename__ = "comments"
-    __id = db.Column(db.String(16), nullable=False)
+    __id = db.Column(db.String(16),primary_key=True, nullable=False)
     __card_id = db.Column(db.String(16), nullable=False)
     __user_id = db.Column(db.String(16), nullable=False)
     __to_user_id = db.Column(db.String(16), nullable=False)
@@ -374,6 +390,23 @@ class Comment(db.Model):
         self.__to_user_id = to_user_id
         self.__comment_content = comment_content
 
+class Praise(db.Model):
+    __tablename__ = "praise"
+    __id = db.Column(db.String(16),primary_key=True, nullable=False)
+    def create_praise(self,card_id,user_id):
+        pass
+    def del_praise(self,card_id,user_id):
+        pass
+
+class Follow(db.Model):
+    __tablename__ = "follow"
+    __id = db.Column(db.String(16),primary_key=True, nullable=False)
+    def create_follow(self,user_id,be_concerned_id):
+        pass
+    
+    def del_follow(self,user_id,be_concerned_id):
+        pass
+
 '''
 class Tag(db.Model):
     __tablename__ ="tags"
@@ -384,4 +417,9 @@ class Card_with_tag(db.Model):
     __id = db.Column(db.String(16),nullable=False)
     __card_id = db.Column(db.String(16),nullable=False)
     __tag_id = db.Column(db.String(16),nullable=False) '''
+
+class PetShow_DataError(Exception):
+    def __init__(self,message):
+        Exception.__init__(self)
+        self.message = message
 
