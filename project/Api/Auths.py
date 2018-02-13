@@ -18,8 +18,6 @@ class auth(Resource):
             return jsonify(status = 0, \
                         message = "failed")
 
-        return jsonify(status =0, \
-                    message = "failed")
 
 class use_auth(Resource):
     @login_required

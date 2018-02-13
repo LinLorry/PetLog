@@ -49,7 +49,7 @@ class User(db.Model):
                 else:
                     data_dict['time'] = int(data_dict['time']) * (10 ** -3)
             elif verify_type == "auth":
-                #验证登陆一定有邮箱和密码
+                # 验证登陆一定有邮箱和密码
                 if not data_dict['email'] or \
                     not data_dict['password']:
                     raise PetShow_DataError("Error : One login lack something")
@@ -64,9 +64,10 @@ class User(db.Model):
 
         else:
             return data_dict
-    #----------------->生成用户的方法
-    #------>用户注册
-    #上面的方法和这个是一样的用处的
+
+    # ----------------->生成用户的方法
+    # ------>用户注册
+    # 上面的方法和这个是一样的用处的
 
     def checke_create(self, create_dict):
         if (create_dict['phonenumber'] is None) or (create_dict['user_nickname'] is None) or (create_dict['password']is None) or (create_dict['email'] is None):
@@ -108,7 +109,7 @@ class User(db.Model):
         self.__email = create_dict['email']
 
         self.__grade = 1  # 直接赋值，初始用户等级均为1
-        self.__avatar_path = touxiangweizhi  # 直接赋值，后端存储一张为默认头像
+        self.__avatar_path = 'touxiangweizhi'  # 直接赋值，后端存储一张为默认头像
 
         # 对于不一定拥有的变量调用set设置器（由后端自动生成字段）
         # 有些设置器还未写,需要补充(若为空赋值为后面的结果)
@@ -117,13 +118,14 @@ class User(db.Model):
         self.set_user_gender(create_dict['gender'])  # 设置为空
         self.set_motto(create_dict['motto'])  # 设置为此用户暂无简介
 
+    # ---------------------------->设置器(set)
     # 设置用户的性别的方法
     # 查看字典是否有该属性
     def set_address(self, user_address):
         if user_address == '':
             self.__address = '未知'
         else:
-            sefl.__address = user_address
+            self.__address = user_address
 
     def set_user_gender(self, user_gender):
         if user_gender == '':
@@ -139,13 +141,15 @@ class User(db.Model):
             self.__motto = user_motto
         return True
 
-    #同下面这个一样写一个更新的方法update()
+    # ---------------------------->设置器(set)结束
+
+    # 同下面这个一样写一个更新的方法update()
 
     def insert(self):
         db.session.add(self)
         db.session.commit()
-    #------****我不大清楚。。
-    #这是查询用户的方法，下面的是我为了测试方便写的，可以不用理
+    # ------****我不大清楚。。
+    # 这是查询用户的方法，下面的是我为了测试方便写的，可以不用理
 
     def select(self, user_dict):
         # 调试用
@@ -154,7 +158,7 @@ class User(db.Model):
         self.__user_nickname = user_dict['email']
         self.password = user_dict['email']
 
-    #------> 登陆时检验密码是否正确
+    # ------> 登陆时检验密码是否正确
     #谔谔，这段emmmm其实不需要的
     def login_check(self, login_dict):
         '''示例：
@@ -177,7 +181,7 @@ class User(db.Model):
                 return {'massage': 'true', 'token': token}
             else:
                 return {'massage': 'flase'}
-    #------------------------>查找用户的方法(通过昵称搜索用户)
+    # ------------------------>查找用户的方法(通过昵称搜索用户)
 
     def find_all_user_number(self, nickname):  # 传入要找的用户的昵称
         peoples = self.query.filter_by(__user_nickname=nickname).all()
@@ -193,9 +197,9 @@ class User(db.Model):
                           'joined_time': people.__joined_time})
         return users  # 由于名称可重复，返回的为同一昵称的用户的id列表
 
-    #--------->(查询自身信息,查询某人的详细信息）
-    #像这样的方法需要写多几个，不单是靠id查找，还有email查找等等
-    #这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
+    # --------->(查询自身信息,查询某人的详细信息）
+    # 像这样的方法需要写多几个，不单是靠id查找，还有email查找等等
+    # 这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
     def find_user(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(__id=user_id).first()
         information = {'nickname': info.__user_nickname,
@@ -205,9 +209,9 @@ class User(db.Model):
                        'motto': info.__motto,
                        'address': info.__address,
                        'grade': info.__grade}
-        return infomation  # 传出此人详细的信息
+        return information  # 传出此人详细的信息
 
-    #---------------------->更改用户信息的方法
+    # ---------------------->更改用户信息的方法
     '''update_dict 为修改后的所有信息形成的字典（包含所有可以后期改动的数据信息，无论是否有改动，均重新赋值）
     update_dict{'user': '2367821367'
                 'new_gender': '你继续猜',
@@ -222,15 +226,55 @@ class User(db.Model):
         it.__motto = update_dict['new_motto']
         it.__address = update_dict['new_address']
 
-    #---------------------->用户的操作部分
-    #-------------------->用户的卡片部分的操作
-    #-------->发布动态
+    # --------------------------->用户的操作部分
+
+    # -------------------->用户的卡片部分的操作
+    # -------->发布动态
 
     def create_card(self, card_dict):
         card = Card()
-        card_dict
-        card.create_card(card_dict)
-        return True
+        card_dict = card.check_data(self.__id, card_dict)
+        if card.create_card(card_dict) \
+            and card.insert():
+            return True
+        else:
+            return False
+
+    # -------------------->用户的评论部分的操作
+    # --------->发布评论
+
+    def create_comment(self, comment_dict):
+        comment = Comment()
+        comment_dict = comment.check_comment(self.__id, comment_dict)
+        if comment.comment_on_card(comment_dict) \
+            and comment.insert():
+            return True
+        else:
+            return False
+    # --------------------->用户的关注部分的操作
+    # --------->关注和取消关注
+
+    def user_follow(self,be_concerned_id,follow_operation ):
+        follow = Follow
+        if follow_operation == '1':
+            return follow.create_follow(self.__id, be_concerned_id)
+        elif follow_operation == '0':
+            return follow.del_follow(self.__id, be_concerned_id)
+        else:
+            return False
+
+    def user_praise(self,be_praise_card_id, praise_operation):
+        praise = Praise()
+        if praise_operation == '1':
+            return praise.create_praise(self.__id,be_praise_card_id)
+        elif praise_operation == '0':
+            return praise.del_praise(self.__id,be_praise_card_id)
+        else:
+            return False
+
+    # --------------------------->用户操作部分结束
+
+    # --------------------------->用户属性部分
 
     @property
     def password(self):
@@ -259,6 +303,7 @@ class User(db.Model):
     def get_user_id(self):
         return self.__user_id
 
+    # --------------------------->用户属性部分结束
     # 获取token的方法，默认时间是10分钟(10*60秒)
     # 密钥使用配置属性，配置属性来自系统变量在project.__init__.py里
     # 加上用户名好在检查token结束后，构造用户对象
@@ -270,8 +315,16 @@ class User(db.Model):
 
     # 计算用户当前等级的方法
     def grade_now(self, grade, user_id, comment_number, praise_number):
+
             # 具体计算待定
         return grade
+
+    #一个获取图数目的方法，每次执行从数据库取出数量，然后增加1并更新数据库的内容，返回这个数字
+    def get_card_image(self):
+        pass
+    #朋友圈方法，last_card_id是上次加载的最后一张卡片id
+    def get_friend_card(self, late_card_id):
+        pass
 
 class Card(db.Model):
     """card model"""
@@ -327,6 +380,26 @@ class Card(db.Model):
             # 找到所有该宠物的卡片
             # 之后按照时间排序，分组，返回以一个月为一组的数据。
 
+    # 给卡片、状态、tags、share（Bool）
+    def check_data(self, user_id, data_dict):
+        try:
+            # 内容和图片不能同时没有
+            if not (data_dict['content'] or
+                    data_dict['images']) or \
+                    not data_dict['time']:
+                raise PetShow_DataError("Error : One post card lack something")
+            else:
+                data_dict['time'] = int(data_dict['time']) * (10 ** -3)
+
+            data_dict['user_id'] = user_id
+        except KeyError as error:
+            print("KeyError : Don't has " + error)
+            raise KeyError
+        except PetShow_DataError as error:
+            print(error.message)
+            raise PetShow_DataError
+        else:
+            return data_dict
 
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "pets"
@@ -369,8 +442,6 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         # 时间轴界面会显示的有关宠物方面的信息（待补充）
 
 #----->评论方面
-
-
 class Comment(db.Model):
     __tablename__ = "comments"
     __id = db.Column(db.String(16),primary_key=True, nullable=False)
@@ -390,22 +461,45 @@ class Comment(db.Model):
         self.__to_user_id = to_user_id
         self.__comment_content = comment_content
 
+    def check_data (self,user_id ,data_dict):
+        try:
+            if not data_dict['content'] or \
+                not data_dict['card_id'] or \
+                not data_dict['time'] :
+                raise PetShow_DataError('Error : One comment card lack something')
+            else:
+                data_dict['user_id'] = user_id
+        except PetShow_DataError as error:
+            print (error.message)
+        except KeyError as error:
+            print ("KeyError : Don't has " + error)
+        else:
+            return data_dict
+
+#----->点赞功能
 class Praise(db.Model):
     __tablename__ = "praise"
     __id = db.Column(db.String(16),primary_key=True, nullable=False)
-    def create_praise(self,card_id,user_id):
+
+    #希望这两个方法成功后返回True,失败返回False
+    #不需要insert方法和update方法了，集成在这两个方法中
+    def create_praise(self,user_id,card_id):
         pass
-    def del_praise(self,card_id,user_id):
+    def del_praise(self,user_id,card_id):
         pass
 
+#----->关注功能
 class Follow(db.Model):
     __tablename__ = "follow"
     __id = db.Column(db.String(16),primary_key=True, nullable=False)
+
+    # 希望这两个方法成功后返回True,失败返回False
+    #不需要insert方法和update方法了，集成在这两个方法中
     def create_follow(self,user_id,be_concerned_id):
         pass
-    
     def del_follow(self,user_id,be_concerned_id):
         pass
+
 
 '''
 class Tag(db.Model):
