@@ -12,6 +12,7 @@ from flask import current_app, g
 
 # 用户模块
 
+
 class User(db.Model):
     __tablename__ = "users"
     __id = db.Column(db.String(16), primary_key=True, nullable=False)
@@ -39,19 +40,21 @@ class User(db.Model):
                 if not data_dict['email'] or \
                         not data_dict['user_nickname'] or \
                         not data_dict['password']:
-                    raise PetShow_DataError("Error : One register lack something")
+                    raise PetShow_DataError(
+                        "Error : One register lack something")
             elif verify_type == "create_card":
                 # 内容和图片不能同时没有
                 if not (data_dict['content'] or
                         data_dict['images']) or \
-                    not data_dict['time']:
-                    raise PetShow_DataError("Error : One post card lack something")
+                        not data_dict['time']:
+                    raise PetShow_DataError(
+                        "Error : One post card lack something")
                 else:
                     data_dict['time'] = int(data_dict['time']) * (10 ** -3)
             elif verify_type == "auth":
                 # 验证登陆一定有邮箱和密码
                 if not data_dict['email'] or \
-                    not data_dict['password']:
+                        not data_dict['password']:
                     raise PetShow_DataError("Error : One login lack something")
 
         except KeyError as error:
@@ -67,19 +70,6 @@ class User(db.Model):
 
     # ----------------->生成用户的方法
     # ------>用户注册
-    # 上面的方法和这个是一样的用处的
-
-    def checke_create(self, create_dict):
-        if (create_dict['phonenumber'] is None) or (create_dict['user_nickname'] is None) or (create_dict['password']is None) or (create_dict['email'] is None):
-            return "您的信息录入不完全，请检查"
-        else:
-            if len(create_dict['phonenumber']) != 11:
-                return "电话号码格式不正确"
-            else:
-                if create_dict['password'] != create_dict['password1']:
-                    return "您两次输入的密码不一致"
-                else:
-                    return create_dict
 
     def create_user(self, create_dict):
 
@@ -143,7 +133,7 @@ class User(db.Model):
 
     # ---------------------------->设置器(set)结束
 
-    # 同下面这个一样写一个更新的方法update()
+    # 同下面这个一样写一个更新的方法update() - . -!
 
     def insert(self):
         db.session.add(self)
@@ -158,29 +148,6 @@ class User(db.Model):
         self.__user_nickname = user_dict['email']
         self.password = user_dict['email']
 
-    # ------> 登陆时检验密码是否正确
-    #谔谔，这段emmmm其实不需要的
-    def login_check(self, login_dict):
-        '''示例：
-        login_dict{'phonenumber':'53458745467',
-                   'password':'767678222'}'''
-        #-------------------------
-        #这里是email吧
-        #someone = login_dict['phonenumber']
-
-
-        someone = login_dict['eamil']
-        someone_key = login_dict['password']
-        user = self.query.filter_by(__phonenumber=someone).first()
-        if user is None:
-            return '此账号尚未注册'
-        else:
-            if user.verify_password(someone_key):
-                g.user = self.query.filter_by(__phonenumber=someone).first()
-                token = g.user.generate_auth_token()
-                return {'massage': 'true', 'token': token}
-            else:
-                return {'massage': 'flase'}
     # ------------------------>查找用户的方法(通过昵称搜索用户)
 
     def find_all_user_number(self, nickname):  # 传入要找的用户的昵称
@@ -198,7 +165,8 @@ class User(db.Model):
         return users  # 由于名称可重复，返回的为同一昵称的用户的id列表
 
     # --------->(查询自身信息,查询某人的详细信息）
-    # 像这样的方法需要写多几个，不单是靠id查找，还有email查找等等
+    # 像这样的方法需要写多几个，不单是靠id查找，还有email查找等等 - . -!
+    # 只写了id和email两个可以查询出所有详细信息的，当输入昵称时，得到的结果不一定具有唯一性，就不显示全部信息见上面的方法，这方面等与前端的进一步沟通。
     # 这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
     def find_user(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(__id=user_id).first()
@@ -211,6 +179,18 @@ class User(db.Model):
                        'grade': info.__grade}
         return information  # 传出此人详细的信息
 
+    def find_user(self, user_email):
+        info = self.query.filter_by(__email=user_email).first()
+        information = {'nickname': info.__user_nickname,
+                       'phonenumber': info.__phonenumber,
+                       'gender': info.__gender,
+                       'avator': info.__avatar_path,
+                       'motto': info._motto,
+                       'address': info._address,
+                       'grade': info.__grade
+                       }
+        return information
+
     # ---------------------->更改用户信息的方法
     '''update_dict 为修改后的所有信息形成的字典（包含所有可以后期改动的数据信息，无论是否有改动，均重新赋值）
     update_dict{'user': '2367821367'
@@ -219,13 +199,16 @@ class User(db.Model):
                 'new_motto': '我没什么好说的，怎么还没完成',
                 'new_address': '江西上饶'}'''
 
-    def update_user(self,update_dict):
+    def update_user(self, update_dict):
         it = self.query.filter_by(__id=update_dict['user']).first()
         it.__gender = update_dict['new_gender']
         it.__avatar_path = update_dict['new_avatar']
         it.__motto = update_dict['new_motto']
         it.__address = update_dict['new_address']
 
+    def update(self):
+        db.session.add(self)
+        db.session.commit()
     # --------------------------->用户的操作部分
 
     # -------------------->用户的卡片部分的操作
@@ -235,7 +218,7 @@ class User(db.Model):
         card = Card()
         card_dict = card.check_data(self.__id, card_dict)
         if card.create_card(card_dict) \
-            and card.insert():
+                and card.insert():
             return True
         else:
             return False
@@ -247,14 +230,14 @@ class User(db.Model):
         comment = Comment()
         comment_dict = comment.check_comment(self.__id, comment_dict)
         if comment.comment_on_card(comment_dict) \
-            and comment.insert():
+                and comment.insert():
             return True
         else:
             return False
     # --------------------->用户的关注部分的操作
     # --------->关注和取消关注
 
-    def user_follow(self,be_concerned_id,follow_operation ):
+    def user_follow(self, be_concerned_id, follow_operation):
         follow = Follow
         if follow_operation == '1':
             return follow.create_follow(self.__id, be_concerned_id)
@@ -263,12 +246,12 @@ class User(db.Model):
         else:
             return False
 
-    def user_praise(self,be_praise_card_id, praise_operation):
+    def user_praise(self, be_praise_card_id, praise_operation):
         praise = Praise()
         if praise_operation == '1':
-            return praise.create_praise(self.__id,be_praise_card_id)
+            return praise.create_praise(self.__id, be_praise_card_id)
         elif praise_operation == '0':
-            return praise.del_praise(self.__id,be_praise_card_id)
+            return praise.del_praise(self.__id, be_praise_card_id)
         else:
             return False
 
@@ -291,8 +274,8 @@ class User(db.Model):
     # 校验密码方法
     def verify_password(self, password):
         return pwd_context.verify(password +
-                                current_app.config['SALT'] +
-                                self.__id,
+                                  current_app.config['SALT'] +
+                                  self.__id,
                                   self.__password_hash)
 
     # 返回用户的名字的方法
@@ -319,12 +302,14 @@ class User(db.Model):
             # 具体计算待定
         return grade
 
-    #一个获取图数目的方法，每次执行从数据库取出数量，然后增加1并更新数据库的内容，返回这个数字
+    # 一个获取图数目的方法，每次执行从数据库取出数量，然后增加1并更新数据库的内容，返回这个数字
     def get_card_image(self):
         pass
-    #朋友圈方法，last_card_id是上次加载的最后一张卡片id
+    # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
+
     def get_friend_card(self, late_card_id):
         pass
+
 
 class Card(db.Model):
     """card model"""
@@ -349,7 +334,6 @@ class Card(db.Model):
             'user_id':'26372832673678',
             'tags':{"1","2"}
         }
-
         '''
         self.__id = uuid.uuid1()
         self.__user_id = create_dict['user_id']
@@ -401,6 +385,7 @@ class Card(db.Model):
         else:
             return data_dict
 
+
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "pets"
     __pet_id = db.Column(db.String(16), nullable=False, primary_key=True)
@@ -442,14 +427,17 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         # 时间轴界面会显示的有关宠物方面的信息（待补充）
 
 #----->评论方面
+
+
 class Comment(db.Model):
     __tablename__ = "comments"
-    __id = db.Column(db.String(16),primary_key=True, nullable=False)
+    __id = db.Column(db.String(16), primary_key=True, nullable=False)
     __card_id = db.Column(db.String(16), nullable=False)
     __user_id = db.Column(db.String(16), nullable=False)
     __to_user_id = db.Column(db.String(16), nullable=False)
     __comment_content = db.Column(db.Text, nullable=False)
 
+#------>发布卡片的部分
     def comment_on_card(self, comment_card_dict):
         '''示例：newcomment_dict{'card_id':'67687',
                                 'user_id':'787897',
@@ -461,45 +449,162 @@ class Comment(db.Model):
         self.__to_user_id = to_user_id
         self.__comment_content = comment_content
 
-    def check_data (self,user_id ,data_dict):
+    def check_data(self, user_id, data_dict):
         try:
             if not data_dict['content'] or \
-                not data_dict['card_id'] or \
-                not data_dict['time'] :
-                raise PetShow_DataError('Error : One comment card lack something')
+                    not data_dict['card_id'] or \
+                    not data_dict['time']:
+                raise PetShow_DataError(
+                    'Error : One comment card lack something')
             else:
                 data_dict['user_id'] = user_id
         except PetShow_DataError as error:
-            print (error.message)
+            print(error.message)
         except KeyError as error:
-            print ("KeyError : Don't has " + error)
+            print("KeyError : Don't has " + error)
         else:
             return data_dict
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+#------->删除评论功能（是否能？）
+    def delete(self, comment_id):
+        comm = self.query.filter_by(_id=commont_id).first()
+        db.session.delete(comm)
+        db.session.commit()
 #----->点赞功能
+
+
 class Praise(db.Model):
     __tablename__ = "praise"
-    __id = db.Column(db.String(16),primary_key=True, nullable=False)
+    __id = db.Column(db.String(16), primary_key=True, nullable=False)
+    __card_id = db.Column(db.String(16), nullable=False)
+    __user_id = db.Column(db.String(16), nullable=False)
+    # 希望这两个方法成功后返回True,失败返回False
+    # 不需要insert方法和update方法了，集成在这两个方法中
 
-    #希望这两个方法成功后返回True,失败返回False
-    #不需要insert方法和update方法了，集成在这两个方法中
-    def create_praise(self,user_id,card_id):
-        pass
-    def del_praise(self,user_id,card_id):
-        pass
+    def create_praise(self, user_id, card_id):
+        try:
+            __id = uuid.uuid1()
+            self.__card_id = card_id
+            self.__user_id = user_id
+            db.session.add(self)
+            db.session.commit()
+        except:
+            return False
+        else:
+            return True
+
+    def del_praise(self, user_id, card_id):
+        try:
+            i = self.query.filter_by(
+                __card_id=card_id, __user_id=user_id).first()
+            db.session.delete(i)
+            db.session.commit()
+        except:
+            return False
+        else:
+            return True
+
+    def find_praise_number(self, card_id):  # 查找某卡片的获赞的数量
+        _all = self.query.filter_by(__card_id=card_id).all()
+        p_number = len(_all)
+        return p_number
+
+    def find_all_praise(self, card_id):  # 查找赞过该卡片的所有人，只显示人的nickname
+        _all = self.query.filter_by(__card_id=card_id).all()
+        p_people = []
+        for p in _all:
+            that_one = User.query.filter_by(__user_id=p.__user_id).first()
+            p_people.append(that_one.__user_nickname)
+        return p_people
+        # 返回所有赞过的人的昵称的列表（这个如果要返回更多信息待议)
 
 #----->关注功能
+
+
 class Follow(db.Model):
     __tablename__ = "follow"
-    __id = db.Column(db.String(16),primary_key=True, nullable=False)
+    __id = db.Column(db.String(16), primary_key=True, nullable=False)
+    __user_id = db.Column(db.String(16), nullable=False)
+    __be_concerned_id db.Column(db.String(16), nullable=False)
 
     # 希望这两个方法成功后返回True,失败返回False
-    #不需要insert方法和update方法了，集成在这两个方法中
-    def create_follow(self,user_id,be_concerned_id):
-        pass
-    def del_follow(self,user_id,be_concerned_id):
-        pass
+    # 不需要insert方法和update方法了，集成在这两个方法中
 
+    def create_follow(self, user_id, be_concerned_id):
+        try:
+            __id = uuid.uuid1()
+            self.__user_id = user_id
+            self.__be_concerned_id = be_concerned_id
+            db.session.add(self)
+            db.session.commit()
+        except:
+            return False
+        else:
+            return True
+
+    def del_follow(self, user_id, be_concerned_id):
+        try:
+            i = self.query.filter_by(
+                __user_id=user_id, __be_concerned_id=be_concerned_id).first()
+            db.session.delete(i)
+            db.session.commit()
+        except:
+            return False
+        else:
+            return True
+
+    def find_follow_number(self, user_id):  # 查找该用户关注的用户的数量为
+        _all = self.query.filter_by(__user_id=user_id).all()
+        f_number = len(_all)
+        return f_number
+
+    def find_followed_number(self, user_id):  # 查找有多少人关注该用户
+        _all = self.query.filter_by(__be_concerned_id=user_id)
+        fd_number = len(_all)
+        return fd_number
+
+    def show_follow_people(self, user_id):  # 显示出该用户关注的用户的初略信息
+        _all = self.query.filter_by(__user_id=user_id).all()
+        f_people = []
+        for a in _all:
+            people = User.query.filter_by(__user_id=a.__user_id).first()
+            f_people.append({'nickname': people.__user_nickname,
+                             'grade': people.__grade,
+                             'avatar': people.__avatar_path})
+        # 返回的信息为：[{},{},{}]这样的形式，每个字典里为一个用户的初略信息。（返回初略的信息的内容待定）
+        # 下面的方法返回的信息的格式同理。
+        return f_people
+
+    def find_followed_people(self, user_id):  # 显示出该用户被哪些人关注的初略信息
+        _all = self.query.filter_by(__be_concerned_id=user_id).all()
+        fd_people = []
+        for b in _all:
+            people = User.query.filter_by(__user_id=b.__be_concerned_id).first
+            fd_people.append({'nickname': people.__user_nickname,
+                              'grade': people.__grade,
+                              'avatar': people.__avatar_path})
+        return fd_people
+
+
+class Share_card(db.Model):
+    __tablename__ = "show_cards"
+    __card_id = db.Column(db.String(16), nullable=False)
+    # 加个这个让它递增，这样显示热门的时候一定程度上相当于时间排序了。
+    __id = db.Column(db.String(16), nullable=False)
+
+    def show_card(self, card_id):
+        self.__card_id = card_id
+        db.session.add(self)
+        db.session.commit()
+
+    def not_show_card(self, card_id):
+        it = self.query.filter_by(__card_id=card_id).first()
+        db.session.delete(it)
+        db.session.commit()
 
 '''
 class Tag(db.Model):
@@ -512,8 +617,9 @@ class Card_with_tag(db.Model):
     __card_id = db.Column(db.String(16),nullable=False)
     __tag_id = db.Column(db.String(16),nullable=False) '''
 
+
 class PetShow_DataError(Exception):
-    def __init__(self,message):
+
+    def __init__(self, message):
         Exception.__init__(self)
         self.message = message
-
