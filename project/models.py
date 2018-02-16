@@ -28,9 +28,9 @@ class User(db.Model):
     __email = db.Column(db.String(32), nullable=False)
 
     # 构造函数
-    # 接口使用的时候要通过这个确定用户
-    # information_dict是查找用户提供的信息字典
-    # create_dict是创造用户提供的信息字典
+    #用来构造一个访客的用户对象
+    def __init__(self,guest):
+        pass
 
     def verify_data(self, data_dict, verify_type):
         try:
@@ -168,7 +168,7 @@ class User(db.Model):
     # 像这样的方法需要写多几个，不单是靠id查找，还有email查找等等 - . -!
     # 只写了id和email两个可以查询出所有详细信息的，当输入昵称时，得到的结果不一定具有唯一性，就不显示全部信息见上面的方法，这方面等与前端的进一步沟通。
     # 这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
-    def find_user(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
+    def find_user_by_id(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(__id=user_id).first()
         information = {'nickname': info.__user_nickname,
                        'phonenumber': info.__phonenumber,
@@ -179,7 +179,7 @@ class User(db.Model):
                        'grade': info.__grade}
         return information  # 传出此人详细的信息
 
-    def find_user(self, user_email):
+    def find_user_by_email(self, user_email):
         info = self.query.filter_by(__email=user_email).first()
         information = {'nickname': info.__user_nickname,
                        'phonenumber': info.__phonenumber,
@@ -238,7 +238,7 @@ class User(db.Model):
     # --------->关注和取消关注
 
     def user_follow(self, be_concerned_id, follow_operation):
-        follow = Follow
+        follow = Follow()
         if follow_operation == '1':
             return follow.create_follow(self.__id, be_concerned_id)
         elif follow_operation == '0':
@@ -305,10 +305,25 @@ class User(db.Model):
     # 一个获取图数目的方法，每次执行从数据库取出数量，然后增加1并更新数据库的内容，返回这个数字
     def get_card_image(self):
         pass
+    
     # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
-
+    # 朋友圈往下刷时，查找之前的朋友圈内容
+    # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
     def get_friend_card(self, late_card_id):
         pass
+    
+    #获取自己的信息
+    def get_information(self):
+        pass
+    
+    #获取他人的信息，user_id是查找的用户id
+    def get_other_information(self,user_id):
+        pass
+    
+    def get_follow(self):
+        follow = Follow()
+        follow_dict = follow.find_followed_people(self.__id)
+
 
 
 class Card(db.Model):
@@ -384,6 +399,10 @@ class Card(db.Model):
             raise PetShow_DataError
         else:
             return data_dict
+
+    #现在先随机从允许查看的卡片中抽取10条卡片，返回这个数组
+    def get_hot_card(self):
+        pass
 
 
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
@@ -471,7 +490,7 @@ class Comment(db.Model):
 
 #------->删除评论功能（是否能？）
     def delete(self, comment_id):
-        comm = self.query.filter_by(_id=commont_id).first()
+        comm = self.query.filter_by(_id=comment_id).first()
         db.session.delete(comm)
         db.session.commit()
 #----->点赞功能
@@ -529,7 +548,7 @@ class Follow(db.Model):
     __tablename__ = "follow"
     __id = db.Column(db.String(16), primary_key=True, nullable=False)
     __user_id = db.Column(db.String(16), nullable=False)
-    __be_concerned_id db.Column(db.String(16), nullable=False)
+    __be_concerned_id = db.Column(db.String(16), nullable=False)
 
     # 希望这两个方法成功后返回True,失败返回False
     # 不需要insert方法和update方法了，集成在这两个方法中
@@ -606,16 +625,20 @@ class Share_card(db.Model):
         db.session.delete(it)
         db.session.commit()
 
-'''
 class Tag(db.Model):
     __tablename__ ="tags"
     __id = db.Column(db.String(16),nullable=False)
     __tag_name = db.Column(db.String(32),nullable=False)
+
+    # 待定，比较麻烦
+    def find_tag(self,tag_name):
+        pass
+
 class Card_with_tag(db.Model):
     __tablename__ = "card_with_tag"
     __id = db.Column(db.String(16),nullable=False)
     __card_id = db.Column(db.String(16),nullable=False)
-    __tag_id = db.Column(db.String(16),nullable=False) '''
+    __tag_id = db.Column(db.String(16),nullable=False)  
 
 
 class PetShow_DataError(Exception):

@@ -30,13 +30,11 @@ def create_app(config_name):
         app.register_blueprint (API_blueprint,url_prefix='/api')
     
     #email
-    app.config['MAIL_SERVER'] = 'smtp.163.com'
-    app.config['MAIL_PORT'] = 465
-    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_SERVER'] = 'smtp.lenconda.top'
+    app.config['MAIL_PORT'] = 25
     app.config['MAIL_USERNAME'] = os.environ.get('PETSHOW_MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('PETSHOW_MAIL_PASSWORD')
-    app.config['MAIL_SUBJECT_PREFIX'] = '[PetShow]'
-    app.config['MAIL_SENDER'] = 'PetShow Admin <PetShow@example.com>'  
+    app.config['MAIL_DEFAULT_SENDER'] = 'PetLog <noreply@lenconda.top>'  
     mail.init_app(app)
 
     #max post 最大上传文件大小16MB

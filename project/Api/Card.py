@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from project.extra import login_required,checke_interface
-from project.models import User,Praise
+from project.models import User,Card
 from flask import request,g,jsonify
 
 class post_card(Resource):
@@ -58,9 +58,15 @@ class user_get_card(Resource):
     #卡片组：发布人头像，昵称，ID，时间，关注与否、点赞与否、内容、状态、tag、赞数、评论数、图片、卡片id、用户id
     #关于卡片，细节多给：评论者ID、评论者头像、昵称、内容、日期
 
+class get_hot_card(Resource):
+    @checke_interface
+    def get(self):
+        card = Card()
+        hot_card = card.get_hot_card()
+        return jsonify(card = hot_card)
+
 class guest_get_card(Resource):
     #访客随机获取的动态接口
-
     def post(self):
         return jsonify(status = 1,
                     message = "success")
