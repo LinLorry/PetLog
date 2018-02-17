@@ -40,7 +40,7 @@ class upload_card_image(Resource):
                     filename = filename)
 
 class download_card_image(Resource):
-    #@login_required
+    @checke_interface
     def get(self, filename):
         if allowed_file(filename):
             image = open(os.path.join(current_app.config['CARD_IMAGES_FOLDER'],

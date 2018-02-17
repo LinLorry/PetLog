@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import Api
 from .Auths import auth,use_auth
-from .Registered import registered,verify_code
+from .Registered import registered,verify_email
 from .Card import post_card,card_comment,user_get_card,get_hot_card, guest_get_card
 from .Card_images import upload_card_image,download_card_image
 from .Business import follow_interface
@@ -13,7 +13,7 @@ api.add_resource (auth,"/login")
 api.add_resource (use_auth,"/auth")
 
 api.add_resource (registered,"/registered")
-api.add_resource (verify_code,"/registered/verify_code")
+api.add_resource (verify_email,"/registered/verify_code")
 
 api.add_resource (post_card,"/user/post_card")
 api.add_resource (card_comment,"/user/post_comment")

@@ -13,7 +13,8 @@ def checke_interface(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except:
+        except Exception as error:
+            print ("Error : " + str(error.__class__) + "    " +error.__str__())
             return jsonify(status = 0,\
                         message = "failed")
     return inner
@@ -30,7 +31,7 @@ def login_required(func):
                 return None # valid token, but expired
             except BadSignature:
                 return None # invalid token
-            g.user = User()
+            g.user = User("user")
             g.user.select(data)
             #g.user.find_user(data['email'])
             return True

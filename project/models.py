@@ -18,7 +18,7 @@ class User(db.Model):
     __id = db.Column(db.String(16), primary_key=True, nullable=False)
     __user_nickname = db.Column(db.String(20), unique=True, nullable=False)
     __password_hash = db.Column(db.String(128), nullable=False)
-    __phonenumber = db.Column(db.String(11), unique=True, nullable=False)
+    __phonenumber = db.Column(db.String(11), unique=True)
     __gender = db.Column(db.String(1), nullable=True)
     __avatar_path = db.Column(db.String(128), nullable=True)
     __motto = db.Column(db.String(256), nullable=True)
@@ -89,7 +89,7 @@ class User(db.Model):
         }'''
 
         # 生产用户的唯一id
-        self.__id = uuid.uuid1()
+        self.__id = str(uuid.uuid1()).split("-")[0]
 
         # 对于必须拥有的变量调用赋值即可
         self.__phonenumber = create_dict['phonenumber']
@@ -113,20 +113,20 @@ class User(db.Model):
     # 查看字典是否有该属性
     def set_address(self, user_address):
         if user_address == '':
-            self.__address = '未知'
+            self.__address = None
         else:
             self.__address = user_address
 
     def set_user_gender(self, user_gender):
         if user_gender == '':
-            self.__gender = '空'
+            self.__gender = None
         else:
             self.__gender = user_gender
         return True
 
     def set_motto(self, user_motto):
         if user_motto == '':
-            self.__motto = '此用户暂无简介。'
+            self.__motto = None
         else:
             self.__motto = user_motto
         return True
@@ -168,6 +168,10 @@ class User(db.Model):
     # 像这样的方法需要写多几个，不单是靠id查找，还有email查找等等 - . -!
     # 只写了id和email两个可以查询出所有详细信息的，当输入昵称时，得到的结果不一定具有唯一性，就不显示全部信息见上面的方法，这方面等与前端的进一步沟通。
     # 这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
+
+
+    #发现，可能误解了，要求是是我这样的，就是将这些查出来的内容赋值给这个用户对象
+
     def find_user_by_id(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(__id=user_id).first()
         information = {'nickname': info.__user_nickname,
@@ -177,6 +181,14 @@ class User(db.Model):
                        'motto': info.__motto,
                        'address': info.__address,
                        'grade': info.__grade}
+        self.__id = info.__id
+        self.__address = info.__address
+        self.__user_nickname = info.__user_nickname
+        self.__phonenumber =info.__phonenumber
+        self.__gender = info.__gender
+        self.__password_hash = info.__password_hash 
+        #......不止这些还有其他的内容
+        
         return information  # 传出此人详细的信息
 
     def find_user_by_email(self, user_email):
@@ -609,7 +621,7 @@ class Follow(db.Model):
         return fd_people
 
 
-class Share_card(db.Model):
+''' class Share_card(db.Model):
     __tablename__ = "show_cards"
     __card_id = db.Column(db.String(16), nullable=False)
     # 加个这个让它递增，这样显示热门的时候一定程度上相当于时间排序了。
@@ -638,7 +650,7 @@ class Card_with_tag(db.Model):
     __tablename__ = "card_with_tag"
     __id = db.Column(db.String(16),nullable=False)
     __card_id = db.Column(db.String(16),nullable=False)
-    __tag_id = db.Column(db.String(16),nullable=False)  
+    __tag_id = db.Column(db.String(16),nullable=False)   '''
 
 
 class PetShow_DataError(Exception):

@@ -7,9 +7,9 @@ class auth(Resource):
     @checke_interface
     def post(self):
 
-        user = User()
+        user = User("user")
         user_data = user.verify_data(request.json,"auth")
-        #user.find_user(user_data['email'])
+        user.find_user_by_email(user_data['email'])
         user.select(user_data)
         if user.verify_password(user_data['password']):
             return jsonify(status = 1, \

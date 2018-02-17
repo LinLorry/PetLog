@@ -1,14 +1,16 @@
 import re
-from flask import jsonify, g, request
+import os
+from flask import jsonify, g, request, current_app, Response
 from flask_restful import Resource
 from project.models import Follow,User
 from project.extra import login_required, checke_interface
 
+re_follow = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')
+
 class follow_interface(Resource):
     @login_required
     def get(self):
-        re_com = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')
-        r = re_com.match(request.query_string.decode('utf-8'))
+        r = re_follow.match(request.query_string.decode('utf-8'))
 
         be_concerned_id = r.group(2)
         follow_operation = r.group(1)
@@ -55,23 +57,21 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in \
            ALLOWED_EXTENSIONS
 
-class upload_card_image(Resource):
+class upload_head_image(Resource):
     #上传卡片图像的类
     @login_required
     def post(self):
         file = request.files['image']
         if file and allowed_file(file.filename):
             #str1是用户的id
-            #str2是用户发布的图片数
-            #str3是图片的后缀
+            #str2是图片的后缀
             str1 = g.user.get_user_id()
-            str2 = g.user.get_image_number()
-            str3 = '.' + file.filename.rsplit('.')[1]
+            str2 = '.' + file.filename.rsplit('.')[1]
 
-            filename = str1 + str2 + str3 
+            filename = str1 + str2
 
             file.save (os.path.join(
-                current_app.config['CARD_IMAGES_FOLDER'],
+                current_app.config['USERHEAD_IMAGES_FOLDER'],
                 filename))
         else:
             return jsonify(status = 0,\
@@ -83,13 +83,17 @@ class upload_card_image(Resource):
 
 class download_card_image(Resource):
     #@login_required
-    def get(self, filename):
-        if allowed_file(filename):
-            image = open(os.path.join(current_app.config['CARD_IMAGES_FOLDER'],
-                                      filename))
-            resp = Response(image, mimetype="image/jpeg")
-            return resp
-        else:
-            return jsonify(status=0,
+    def get(self, user_id):
+        
+        for path in os.listdir(current_app.config['USERHEAD_IMAGES_FOLDER']):
+            
+            if request.json['user_id'] == path.rsplit('.')[0]:
+                image = open(os.path.join(
+                            current_app.config['USERHEAD_IMAGES_FOLDER'],
+                            path))
+                resp = Response(image, mimetype="image/jpeg")
+                return resp
+            else:
+                return jsonify(status=0,
                            message='failed')
 

@@ -8,14 +8,14 @@ class registered(Resource):
     @checke_interface
     def post(self):
         if self.verify_code(request.json):
-            user = User()
+            user = User("user")
             user_dict = user.verify_data(request.json,verify_type = 'register')
             user.create_user(user_dict)
             user.insert()
 
             #用于调试查看的
-            print ("phonenumber:%s,user_nickname:%s,password:%s"  %  (\
-                user_dict['phonenumber'],
+            print ("email:%s,user_nickname:%s,password:%s"  %  (\
+                user_dict['email'],
                 user_dict['user_nickname'],
                 user_dict['password']))
 
@@ -40,14 +40,14 @@ class registered(Resource):
             print(error.message)
             raise PetShow_DataError
         except KeyError as error:
-            print("KeyError : Don't has " + error)
+            print("KeyError : Don't has " + str(error))
             raise KeyError
         except:
             return False
         else:
             return True
 
-class verify_code(Resource):
+class verify_email(Resource):
     @checke_interface
     def post(self):
         email = request.json['email']
