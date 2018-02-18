@@ -1,17 +1,16 @@
 import pymysql
 pymysql.install_as_MySQLdb()
 
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-import random
 import time
-from datetime import datetime
+import random
 import uuid
 from . import db
+from datetime import datetime
 from flask import current_app, g
+from passlib.apps import custom_app_context as pwd_context
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 # 用户模块
-
 
 class User(db.Model):
     __tablename__ = "users"
@@ -40,14 +39,14 @@ class User(db.Model):
                 if not data_dict['email'] or \
                         not data_dict['user_nickname'] or \
                         not data_dict['password']:
-                    raise PetShow_DataError(
+                    raise PetLog_DataError(
                         "Error : One register lack something")
             elif verify_type == "create_card":
                 # 内容和图片不能同时没有
                 if not (data_dict['content'] or
                         data_dict['images']) or \
                         not data_dict['time']:
-                    raise PetShow_DataError(
+                    raise PetLog_DataError(
                         "Error : One post card lack something")
                 else:
                     data_dict['time'] = int(data_dict['time']) * (10 ** -3)
@@ -55,15 +54,15 @@ class User(db.Model):
                 # 验证登陆一定有邮箱和密码
                 if not data_dict['email'] or \
                         not data_dict['password']:
-                    raise PetShow_DataError("Error : One login lack something")
+                    raise PetLog_DataError("Error : One login lack something")
 
         except KeyError as error:
             print("KeyError : Don't has " + error)
             raise KeyError
 
-        except PetShow_DataError as e:
+        except PetLog_DataError as e:
             print(e.message)
-            raise PetShow_DataError
+            raise PetLog_DataError
 
         else:
             return data_dict
@@ -138,6 +137,7 @@ class User(db.Model):
     def insert(self):
         db.session.add(self)
         db.session.commit()
+        return True
     # ------****我不大清楚。。
     # 这是查询用户的方法，下面的是我为了测试方便写的，可以不用理
 
@@ -223,6 +223,18 @@ class User(db.Model):
         db.session.commit()
     # --------------------------->用户的操作部分
 
+    # -------------------->用户宠物部分的操作
+    # -------->新建宠物
+
+    def create_pet(self, pet_dict):
+        pet = Pet()
+        pet_dict = pet.check_data(self.__id, pet_dict)
+        if pet.create_pet(pet_dict) \
+            and pet.insert():
+            return True
+        else:
+            return False
+
     # -------------------->用户的卡片部分的操作
     # -------->发布动态
 
@@ -230,7 +242,7 @@ class User(db.Model):
         card = Card()
         card_dict = card.check_data(self.__id, card_dict)
         if card.create_card(card_dict) \
-                and card.insert():
+            and card.insert():
             return True
         else:
             return False
@@ -242,7 +254,7 @@ class User(db.Model):
         comment = Comment()
         comment_dict = comment.check_comment(self.__id, comment_dict)
         if comment.comment_on_card(comment_dict) \
-                and comment.insert():
+            and comment.insert():
             return True
         else:
             return False
@@ -336,8 +348,6 @@ class User(db.Model):
         follow = Follow()
         follow_dict = follow.find_followed_people(self.__id)
 
-
-
 class Card(db.Model):
     """card model"""
     __tablename__ = "cards"
@@ -362,7 +372,7 @@ class Card(db.Model):
             'tags':{"1","2"}
         }
         '''
-        self.__id = uuid.uuid1()
+        self.__id = str(uuid.uuid1()).split("-")[0]
         self.__user_id = create_dict['user_id']
         self.__content = create_dict['content']
         self.__pet_id = create_dict['pet_id']
@@ -398,7 +408,7 @@ class Card(db.Model):
             if not (data_dict['content'] or
                     data_dict['images']) or \
                     not data_dict['time']:
-                raise PetShow_DataError("Error : One post card lack something")
+                raise PetLog_DataError("Error : One post card lack something")
             else:
                 data_dict['time'] = int(data_dict['time']) * (10 ** -3)
 
@@ -406,16 +416,15 @@ class Card(db.Model):
         except KeyError as error:
             print("KeyError : Don't has " + error)
             raise KeyError
-        except PetShow_DataError as error:
+        except PetLog_DataError as error:
             print(error.message)
-            raise PetShow_DataError
+            raise PetLog_DataError
         else:
             return data_dict
 
     #现在先随机从允许查看的卡片中抽取10条卡片，返回这个数组
     def get_hot_card(self):
         pass
-
 
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "pets"
@@ -434,18 +443,19 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
     def create_pet(self, create_dict):
         # 宠物唯一id的生成
-        self.__pet_id = uuid.uuid1()
+        self.__pet_id = str(uuid.uuid1()).split("-")[0]
         self.__category = create_dict['category']
         self.__pet_name = create_dict['pet_name']
         self.__user_id = create_dict['user_id']
         self .__gender = create_dict['gender']
-        pass
+        return True
 
     def insert(self):
         # 内容记录进数据库
         db.session.add(self)
         db.session.commint()
         # session.close()
+        return True
 
     def user_all_pet(self, user_id):
         # 时间轴界面下获取某用户所有宠物的id
@@ -456,9 +466,30 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         return all_pet
         # 返回某用户所有的宠物id（以列表套字典的格式返回）例：[{'id':'08980','name':'奥利奥'},{'id':'87389','name':'趣多多'}]
         # 时间轴界面会显示的有关宠物方面的信息（待补充）
+    
+    def check_data(self, user_id, data_dict):
+        try:
+            data_dict['detailed_category']
+            data_dict['gender']
+            data_dict['pet_avatar_path']
+            if not data_dict['pet_name'] or \
+                    not data_dict['category'] or \
+                    not data_dict['gender'] or \
+                    not data_dict['time']:
+                raise PetLog_DataError(
+                    'One create_pet lack something')
+            else:
+                data_dict['user_id'] = user_id
+        except KeyError as error:
+            print ("Error : dict lack some key!")
+            raise error
+        except PetLog_DataError as error:
+            print ("Error : One create_pet lack something can't be None!")
+            raise error
+        else:
+            return data_dict
 
 #----->评论方面
-
 
 class Comment(db.Model):
     __tablename__ = "comments"
@@ -467,14 +498,13 @@ class Comment(db.Model):
     __user_id = db.Column(db.String(16), nullable=False)
     __to_user_id = db.Column(db.String(16), nullable=False)
     __comment_content = db.Column(db.Text, nullable=False)
-
-#------>发布卡片的部分
+    #------>发布卡片的部分
     def comment_on_card(self, comment_card_dict):
         '''示例：newcomment_dict{'card_id':'67687',
                                 'user_id':'787897',
                                 'to_user_id':'79980980',
                                 'commtent_content':'真的有点很烦呢。'}'''
-        self.__id = uuid.uuid1()
+        self.__id = str(uuid.uuid1()).split("-")[0]
         self.__card_id = card_id
         self.__user_id = user_id
         self.__to_user_id = to_user_id
@@ -485,11 +515,11 @@ class Comment(db.Model):
             if not data_dict['content'] or \
                     not data_dict['card_id'] or \
                     not data_dict['time']:
-                raise PetShow_DataError(
+                raise PetLog_DataError(
                     'Error : One comment card lack something')
             else:
                 data_dict['user_id'] = user_id
-        except PetShow_DataError as error:
+        except PetLog_DataError as error:
             print(error.message)
         except KeyError as error:
             print("KeyError : Don't has " + error)
@@ -499,14 +529,14 @@ class Comment(db.Model):
     def insert(self):
         db.session.add(self)
         db.session.commit()
+        return True
 
-#------->删除评论功能（是否能？）
+    #------->删除评论功能（是否能？）
     def delete(self, comment_id):
         comm = self.query.filter_by(_id=comment_id).first()
         db.session.delete(comm)
         db.session.commit()
-#----->点赞功能
-
+    #----->点赞功能
 
 class Praise(db.Model):
     __tablename__ = "praise"
@@ -518,7 +548,7 @@ class Praise(db.Model):
 
     def create_praise(self, user_id, card_id):
         try:
-            __id = uuid.uuid1()
+            __id = str(uuid.uuid1()).split("-")[0]
             self.__card_id = card_id
             self.__user_id = user_id
             db.session.add(self)
@@ -555,7 +585,6 @@ class Praise(db.Model):
 
 #----->关注功能
 
-
 class Follow(db.Model):
     __tablename__ = "follow"
     __id = db.Column(db.String(16), primary_key=True, nullable=False)
@@ -567,7 +596,7 @@ class Follow(db.Model):
 
     def create_follow(self, user_id, be_concerned_id):
         try:
-            __id = uuid.uuid1()
+            __id = str(uuid.uuid1()).split("-")[0]
             self.__user_id = user_id
             self.__be_concerned_id = be_concerned_id
             db.session.add(self)
@@ -620,7 +649,6 @@ class Follow(db.Model):
                               'avatar': people.__avatar_path})
         return fd_people
 
-
 ''' class Share_card(db.Model):
     __tablename__ = "show_cards"
     __card_id = db.Column(db.String(16), nullable=False)
@@ -652,9 +680,11 @@ class Card_with_tag(db.Model):
     __card_id = db.Column(db.String(16),nullable=False)
     __tag_id = db.Column(db.String(16),nullable=False)   '''
 
-
-class PetShow_DataError(Exception):
+class PetLog_DataError(Exception):
 
     def __init__(self, message):
         Exception.__init__(self)
         self.message = message
+
+    def __str__(self):
+        return self.message

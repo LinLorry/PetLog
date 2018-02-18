@@ -2,7 +2,8 @@ import re
 import os
 from flask import jsonify, g, request, current_app, Response
 from flask_restful import Resource
-from project.models import Follow,User
+from project.Models.Follow import Follow
+from project.Models.User import User
 from project.extra import login_required, checke_interface
 
 re_follow = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')

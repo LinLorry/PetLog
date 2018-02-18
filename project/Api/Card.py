@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from project.extra import login_required,checke_interface
-from project.models import User,Card
+from project.Models.User import User
+from project.Models.Card import Card
 from flask import request,g,jsonify
 
 class post_card(Resource):

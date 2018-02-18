@@ -1,6 +1,7 @@
 from flask_restful import Resource
 from flask import jsonify,request, current_app
-from project.models import User, PetShow_DataError
+from project.Models.User import User
+from project.Models.PetLogDataError import PetLog_DataError
 from project.extra import send_email, checke_interface
 from hashlib import md5
 
@@ -35,10 +36,10 @@ class registered(Resource):
             m = md5()
             m.update(src.encode('utf-8'))
             if code_dict['code'] != m.hexdigest():
-                raise PetShow_DataError('Error : One other person post register interface')
-        except PetShow_DataError as error:
+                raise PetLog_DataError('Error : One other person post register interface')
+        except PetLog_DataError as error:
             print(error.message)
-            raise PetShow_DataError
+            raise PetLog_DataError
         except KeyError as error:
             print("KeyError : Don't has " + str(error))
             raise KeyError

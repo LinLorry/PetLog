@@ -1,4 +1,4 @@
-USE PetShow
+USE PetLog
 
 CREATE TABLE users
 (

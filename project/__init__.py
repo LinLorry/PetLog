@@ -1,5 +1,5 @@
-from flask import Flask,Blueprint
 import os
+from flask import Flask,Blueprint
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 
@@ -20,11 +20,11 @@ def create_app(config_name):
         app.register_blueprint (API_blueprint,url_prefix='/testapi')
         
     else:
-        app.config['SECRET_KEY'] = os.getenv("PETSHOW_SECRET_KEY")
-        app.config['CARD_IMAGES_FOLDER'] = os.getenv("PETSHOW_CARD_IMAGES")
-        app.config['SALT'] = os.getenv("PETSHOW_SALT")
-        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("PETSHOW_DATABASE")
-        app.config['REGISER_CODE'] = os.getenv("PETSHOW_REGISER_KEY")
+        app.config['SECRET_KEY'] = os.getenv("PETLOG_SECRET_KEY")
+        app.config['CARD_IMAGES_FOLDER'] = os.getenv("PETLOG_CARD_IMAGES")
+        app.config['SALT'] = os.getenv("PETLOG_SALT")
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("PETLOG_DATABASE")
+        app.config['REGISER_CODE'] = os.getenv("PETLOG_REGISER_KEY")
         #Buleprint
         from .Api import API_blueprint
         app.register_blueprint (API_blueprint,url_prefix='/api')
@@ -32,9 +32,9 @@ def create_app(config_name):
     #email
     app.config['MAIL_SERVER'] = 'smtp.lenconda.top'
     app.config['MAIL_PORT'] = 25
-    app.config['MAIL_USERNAME'] = os.environ.get('PETSHOW_MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.environ.get('PETSHOW_MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = 'PetLog <noreply@lenconda.top>'  
+    app.config['MAIL_USERNAME'] = os.environ.get('PETLOG_MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('PETLOG_MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = 'PETLOG <noreply@lenconda.top>'  
     mail.init_app(app)
 
     #max post 最大上传文件大小16MB

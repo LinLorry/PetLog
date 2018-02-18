@@ -1,11 +1,11 @@
 import random
+from . import mail
 from flask import request,abort,current_app,g,jsonify,render_template
 from functools import wraps
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import SignatureExpired,BadSignature
-from .models import User
+from .Models.User import User
 from flask_mail import Message
-from . import mail
 from threading import Thread
 
 def checke_interface(func):
@@ -31,8 +31,8 @@ def login_required(func):
                 return None # valid token, but expired
             except BadSignature:
                 return None # invalid token
-            g.user = User("user")
-            g.user.select(data)
+            g.user = User()
+            g.user.find_user_by_id(data['id'])
             #g.user.find_user(data['email'])
             return True
             
@@ -55,6 +55,6 @@ def send_email(to_mail):
     from manage import app
     msg  = Message("验证用于 PetLog 的注册",recipients = [to_mail])
     code = ''.join(random.sample([chr(i) for i in range(65,91)],5))
-    msg.html = render_template("mail.html",code = code)
+    msg.html = render_template("./static/templates/mail.html",code = code)
     thr = Thread(target=send_async_email, args=[app,msg])
     return thr

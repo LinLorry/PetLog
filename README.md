@@ -12,19 +12,19 @@
 
 ### **系统环境变量：**
 
-PETSHOW\_SALT:保存密码使用的“盐”
+PetLog\_SALT:保存密码使用的“盐”
 
-PETSHOW\_DATABASE:数据库URL
+PetLog\_DATABASE:数据库URL
 
-PETSHOW\_SECRET\_KEY:密钥
+PetLog\_SECRET\_KEY:密钥
 
-PETSHOW\_REGISER\_KEY:注册用户时的加密密钥
+PetLog\_REGISER\_KEY:注册用户时的加密密钥
 
-PETSHOW\_CARD\_IMAGES:用户的图片的存储路径
+PetLog\_CARD\_IMAGES:用户的图片的存储路径
 
-PETSHOW\_MAIL\_USERNAME:邮箱系统账号
+PetLog\_MAIL\_USERNAME:邮箱系统账号
 
-PETSHOW\_MAIL\_PASSWORD:邮箱系统密码
+PetLog\_MAIL\_PASSWORD:邮箱系统密码
 
 ### API：
 
