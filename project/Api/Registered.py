@@ -60,5 +60,6 @@ class verify_email(Resource):
 
         send_email(email,code)
         m = md5()
+        m.update(code.encode('utf-8'))
         return jsonify(status=1,
-                    code=m.update(code.encode('utf-8')))
+                    code=m.hexdigest())
