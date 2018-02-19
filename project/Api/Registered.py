@@ -1,3 +1,4 @@
+import random
 from flask_restful import Resource
 from flask import jsonify,request, current_app
 from project.Models.User import User
@@ -52,10 +53,12 @@ class verify_email(Resource):
     @checke_interface
     def post(self):
         email = request.json['email']
+        code = ''.join(random.sample([chr(i) for i in range(65,91)],5))
         if not email.strip():
             return jsonify(status=0,
                         message = "failed")
 
-        send_email(email)
+        send_email(email,code)
+        m = md5()
         return jsonify(status=1,
-                    message="success")
+                    code=m.update(code.encode('utf-8')))
