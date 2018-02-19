@@ -8,6 +8,11 @@ from .Models.User import User
 from flask_mail import Message
 from threading import Thread
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in \
+           current_app.config['IMAGE_ALLOWED_EXTENSIONS']
+
 def checke_interface(func):
     @wraps(func)
     def inner(*args, **kwargs):

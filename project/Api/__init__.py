@@ -1,16 +1,17 @@
 from flask import Blueprint
 from flask_restful import Api
 from .Auths import auth,use_auth
-from .Registered import registered,verify_email
+from .Registered import registered,verify_email, new_user_image
 from .Card import post_card,card_comment,user_get_card,get_hot_card, guest_get_card
 from .Card_images import upload_card_image,download_card_image
-from .Business import follow_interface
+from .Business import follow_interface,upload_head_image
 from .PetBusiness import create_pet, get_user_all_pet
 
 API_blueprint = Blueprint('API',__name__)
 api = Api (API_blueprint)
 
 api.add_resource (registered,"/registered")
+api.add_resource (new_user_image,"/")
 api.add_resource (verify_email,"/registered/verify_code")
 
 api.add_resource (auth,"/login")

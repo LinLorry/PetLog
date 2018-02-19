@@ -4,7 +4,7 @@ from flask import jsonify, g, request, current_app, Response
 from flask_restful import Resource
 from project.Models.Follow import Follow
 from project.Models.User import User
-from project.extra import login_required, checke_interface
+from project.extra import login_required, checke_interface, allowed_file
 
 re_follow = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')
 
@@ -49,15 +49,6 @@ class guest_get_information(Resource):
                         user.get_other_information(
                             request.json['user_id']))
 
-# 上传文件的限制格式
-ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg'])
-
-# 限制上传文件的格式函数
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in \
-           ALLOWED_EXTENSIONS
-
 class upload_head_image(Resource):
     #上传卡片图像的类
     @login_required
@@ -94,7 +85,9 @@ class download_card_image(Resource):
                             path))
                 resp = Response(image, mimetype="image/jpeg")
                 return resp
-            else:
-                return jsonify(status=0,
-                           message='failed')
+        
+        image = open(os.path.join(current_app.config['USERHEAD_IMAGES_FOLDER'],
+                            'default.jpg'))
+        resp = Response(image, mimetype="image/jpeg")
+        return resp
 

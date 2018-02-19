@@ -30,6 +30,7 @@ def create_app(config_name):
         app.register_blueprint (API_blueprint,url_prefix='/api')
     
     #email
+    app.config['IMAGE_ALLOWED_EXTENSIONS'] = set(['jpg', 'png', 'jpeg'])
     app.config['MAIL_SERVER'] = 'smtp.lenconda.top'
     app.config['MAIL_PORT'] = 25
     app.config['MAIL_USERNAME'] = os.environ.get('PETLOG_MAIL_USERNAME')

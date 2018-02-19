@@ -1,4 +1,4 @@
-from project.extra import login_required,checke_interface
+from project.extra import login_required,checke_interface, allowed_file
 from flask_restful import Resource
 from flask import request, current_app, g, jsonify, Response
 from werkzeug import secure_filename
@@ -8,10 +8,6 @@ import os
 ALLOWED_EXTENSIONS = set(['jpg', 'png', 'jpeg'])
 
 # 限制上传文件的格式函数
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in \
-           ALLOWED_EXTENSIONS
 
 class upload_card_image(Resource):
     #上传卡片图像的类
