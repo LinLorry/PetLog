@@ -55,6 +55,6 @@ def send_email(to_mail):
     from manage import app
     msg  = Message("验证用于 PetLog 的注册",recipients = [to_mail])
     code = ''.join(random.sample([chr(i) for i in range(65,91)],5))
-    msg.html = render_template("./static/templates/mail.html",code = code)
+    msg.html = render_template("mail.html",code = code)
     thr = Thread(target=send_async_email, args=[app,msg])
     return thr
