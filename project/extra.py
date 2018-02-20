@@ -8,7 +8,7 @@ from .Models.User import User
 from flask_mail import Message
 from threading import Thread
 
-def allowed_file(filename):
+def allowed_image(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in \
            current_app.config['IMAGE_ALLOWED_EXTENSIONS']
@@ -56,10 +56,11 @@ def send_async_email(app,msg):
     with app.app_context():
         mail.send(msg)
 
-def send_email(to_mail,code):
+def send_registered_email(to_mail,code):
     from manage import app
     msg  = Message("验证用于 PetLog 的注册",recipients = [to_mail])
     
     msg.html = render_template("mail.html",code = code)
     thr = Thread(target=send_async_email, args=[app,msg])
+    thr.start()
     return thr

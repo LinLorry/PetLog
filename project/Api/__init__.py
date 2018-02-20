@@ -11,11 +11,12 @@ API_blueprint = Blueprint('API',__name__)
 api = Api (API_blueprint)
 
 api.add_resource (registered,"/registered")
-api.add_resource (new_user_image,"/")
+api.add_resource (new_user_image,"/registered/")
 api.add_resource (verify_email,"/registered/verify_code")
 
 api.add_resource (auth,"/login")
 api.add_resource (use_auth,"/auth")
+api.add_resource ()
 
 api.add_resource (create_pet,"/user/create_pet")
 api.add_resource (get_user_all_pet,"/user/all_pets")

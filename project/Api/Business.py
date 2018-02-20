@@ -1,6 +1,8 @@
 import re
 import os
+import md5, uuid
 from flask import jsonify, g, request, current_app, Response
+from werkzeug import secure_filename
 from flask_restful import Resource
 from project.Models.Follow import Follow
 from project.Models.User import User
@@ -49,7 +51,7 @@ class guest_get_information(Resource):
                         user.get_other_information(
                             request.json['user_id']))
 
-class upload_head_image(Resource):
+class upload_avatar(Resource):
     #上传卡片图像的类
     @login_required
     def post(self):
@@ -57,8 +59,14 @@ class upload_head_image(Resource):
         if file and allowed_file(file.filename):
             #str1是用户的id
             #str2是图片的后缀
-            str1 = g.user.get_user_id()
-            str2 = '.' + file.filename.rsplit('.')[1]
+            str1 = str(uuid.uuid1()).split("-")[0]
+            str2 = secure_filename(file.filename).rsplit('.')[0]
+            str3 = '.' + file.filename.rsplit('.')[1]
+
+            m = md5()
+            m.update((str1 + str2).encode ('utf-8'))
+
+            filename = m.hexdigest()[-8:8] + str3
 
             filename = str1 + str2
 
@@ -72,22 +80,3 @@ class upload_head_image(Resource):
         #文件上传成功，返回文件名
         return jsonify(status = 1,\
                     filename = filename)
-
-class download_card_image(Resource):
-    #@login_required
-    def get(self, user_id):
-        
-        for path in os.listdir(current_app.config['USERHEAD_IMAGES_FOLDER']):
-            
-            if request.json['user_id'] == path.rsplit('.')[0]:
-                image = open(os.path.join(
-                            current_app.config['USERHEAD_IMAGES_FOLDER'],
-                            path))
-                resp = Response(image, mimetype="image/jpeg")
-                return resp
-        
-        image = open(os.path.join(current_app.config['USERHEAD_IMAGES_FOLDER'],
-                            'default.jpg'))
-        resp = Response(image, mimetype="image/jpeg")
-        return resp
-
