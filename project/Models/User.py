@@ -151,12 +151,12 @@ class User(db.Model):
     # ------------------------>查找用户的方法(通过昵称搜索用户)
 
     def find_all_user_number(self, nickname):  # 传入要找的用户的昵称
-        peoples = self.query.filter_by(__user_nickname=nickname).all()
+        peoples = self.query.filter_by(_User__user_nickname=nickname).all()
         number = len(peoples)
         return number  # 返回的为同一昵称的用户的总数
 
     def find_all_user(self, nickname):  # 传入要找的用户的昵称
-        peoples = self.query.filter_by(__user_nickname=nickname).all()
+        peoples = self.query.filter_by(_User__user_nickname=nickname).all()
         users = []
         for people in peoples:
             users.append({'nickname': people.__user_nickname,
@@ -201,6 +201,12 @@ class User(db.Model):
                        'address': info._address,
                        'grade': info.__grade
                        }
+        self.__id = info.__id
+        self.__address = info.__address
+        self.__user_nickname = info.__user_nickname
+        self.__phonenumber =info.__phonenumber
+        self.__gender = info.__gender
+        self.__password_hash = info.__password_hash
         return information
 
     # ---------------------->更改用户信息的方法
@@ -217,9 +223,7 @@ class User(db.Model):
         it.__avatar_path = update_dict['new_avatar']
         it.__motto = update_dict['new_motto']
         it.__address = update_dict['new_address']
-
-    def update(self):
-        db.session.add(self)
+        db.session.add(it)
         db.session.commit()
     # --------------------------->用户的操作部分
 
@@ -332,14 +336,24 @@ class User(db.Model):
         return grade
 
     # 一个获取图数目的方法，每次执行从数据库取出数量，然后增加1并更新数据库的内容，返回这个数字
-    def get_card_image(self):
+    def get_card_image(self):#???
         pass
     
     # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
     # 朋友圈往下刷时，查找之前的朋友圈内容
     # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
     def get_friend_card(self, late_card_id):
-        pass
+        m = get_follow(self)
+        _all = []
+        show = []
+        card = Card()
+        for people in m:
+            _all.append(card.get_one_all_share(people.__id))
+        for i in len(_all):
+            while _all[i]['id'] ==late_card_id:
+                for m in range(i,len(_all)+1):
+                    show.append(_all[m])
+        return show
     
     #获取自己的信息
     def get_information(self):
@@ -352,3 +366,5 @@ class User(db.Model):
     def get_follow(self):
         follow = Follow()
         follow_dict = follow.find_followed_people(self.__id)
+        return follow_dict
+
