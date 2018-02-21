@@ -11,7 +11,8 @@ class Card(db.Model):
     __card_content = db.Column(db.Text, nullable=True)
     __card_image_path = db.Column(db.String(128), nullable=True)
     __card_time = db.Column(db.DateTime, nullable=False)
-
+    __card_type = db.Column(db.String(1),nullable=False)
+    
     #------>发布动态
 
     def create_card(self, create_dict):
@@ -30,7 +31,8 @@ class Card(db.Model):
         self.__user_id = create_dict['user_id']
         self.__content = create_dict['content']
         self.__pet_id = create_dict['pet_id']
-
+        self.__card_type = create_dict['card_type']
+        
         # 以下部分为发布卡片不一样要携带的信息
         self.__images = create_dict['images']
         self.__tags = create_dict['tags']
@@ -43,7 +45,6 @@ class Card(db.Model):
         # 内容记录进数据库
         db.session.add(self)
         db.session.commit()
-        # session.close()
         return True
 
     def time_card(self, user_id):
@@ -80,4 +81,33 @@ class Card(db.Model):
 
     #现在先随机从允许查看的卡片中抽取10条卡片，返回这个数组
     def get_hot_card(self):
-        pass
+        m = self.query.filter_by(_Card__card_type=1).all()
+        show = []
+        n = []
+        i = []
+        if len(m)<10:
+            return m
+        else:
+            while len(i) < 11 :
+                n.append(m[random.randint(1,len(m))])
+                i=list(set(n))
+        for one in i:
+            show.append(m[one])
+        return show
+    #返回一个人的所有相关卡片的信息
+    def get_one_all(self,user_id):
+        _all = self.query.filter_by(_Card__card_id=user_id).all()
+        return _all
+    #返回一个宠物的所有相关卡片的信息
+    def get_pet_all(self,pet_id): 
+        pet_all_card = self.query.filter_by(_Card__pet_id=pet_id).all()
+        return pet_all_card
+    #返回一个用户的所有可分享的卡片：
+    def get_one_all_share(self,user_id):
+        share_all = self.query.filter_by(_Card__user_id=user_id,_Card__card_type=1).all()
+        return share_all
+    #返回一个宠物的所有可分享的卡片：
+    def get_one_all_share(self,pet_id):
+        share_pet_all = self.query.filter_by(_Card__pet_id=pet_id,_Card__card_type=1).all()
+        return share_pet_all
+    
