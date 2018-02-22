@@ -1,4 +1,6 @@
 import uuid
+import random
+import time
 from project import db
 from .PetLogDataError import PetLog_DataError
 
@@ -12,12 +14,25 @@ class Card(db.Model):
     __card_image_path = db.Column(db.String(128), nullable=True)
     __card_time = db.Column(db.DateTime, nullable=False)
     __card_type = db.Column(db.String(1),nullable=False)
+    __whether_share = db.Column(db.Integer,nullable = False)
     
+    def __init__(self,card_id = None):
+        if card_id:
+            info = self.query.filter_by(_Card__id=card_id).all()
+            self.__id = info.__id
+            self.__user_id = info.__user_id
+            self.__pet_id = info.__pet_id
+            self.__card_content = info.__card_content
+            self.__card_image_path = info.__card_image_path
+            self.__card_time = info.__card_time
+            self.__whether_share = info.__whether_share
+        else:
+            pass
     #------>发布动态
 
     def create_card(self, create_dict):
         # 创造卡片对象
-        '''create_dict必须带有的信息为：发布者的id,发布的内容（内容不得为空），相关的宠物的id,图片可以为空，标签不得为空。
+        '''create_dict必须带的信息为：发布者的id,发布的内容（内容不得为空），相关的宠物的id,图片可以为空，标签不得为空。
         例如（仅是必须包括的信息的示例）：（标签不得为空，便于为卡片分类）
         {
             'content':'iihoi'，
@@ -36,7 +51,8 @@ class Card(db.Model):
         # 以下部分为发布卡片不一样要携带的信息
         self.__images = create_dict['images']
         self.__tags = create_dict['tags']
-        pass
+        self.__whether_share = 1
+        return True
 
     def set_card_image(self, card_image):
         pass
@@ -47,16 +63,69 @@ class Card(db.Model):
         db.session.commit()
         return True
 
-    def time_card(self, user_id):
-        from .User import User
-        user = User(content=user_id,option='id')
-        that = user.user_all_pet(user_id)
-        num = len(that)
-        for i in range(len(that)):
-            pet = that[i]['id']
-            cards = self.query.filter_by(__pet_id=pet).all()
-            # 找到所有该宠物的卡片
-            # 之后按照时间排序，分组，返回以一个月为一组的数据。
+    def timeline(self, pet):
+        info = self.query.filter_by(__pet_id=pet.get_pet_id()).all()
+        cards = {
+            "name" : pet.get_name(),
+            "age" : pet.get_age(),
+            "avatar" : pet.get_avatar(),
+            "mooto" : pet.get_motto(),
+            "items" : []
+        }
+        if info is None:
+            return cards
+        items = []
+        info = sorted(info,key = lambda s: s.get_time(),
+                    reverse=True)
+        
+        one_card = {
+            "content" : info[0].get_content(),
+            "images" : info[0].get_images(),
+            "status" : info[0].get_status(),
+            "id" : info[0].get_id()
+        }
+        one_day = [one_card]
+        one_item = {
+            "date" : info[0].get_card_date(),
+            "items" : [],
+            "is_year" : False
+        }
+
+        day = info[0].get_tm_yday()
+        year = info[0].get_tm_year()
+
+        for i in info:
+            if (i.get_tm_yday() != day) or \
+                (i.get_tm_year() != year):
+                one_item["items"] = one_day
+                items.append(one_item)
+                
+                one_day = []
+                one_item["date"] = i.get_card_date(),
+                day = i.get_tm_yday()
+                if i.get_tm_year() != year:
+                    x = {
+                        "date":"",
+                        "items":[],
+                        "is_year":True,
+                        "year":year
+                    }
+                    items.append(x)
+                    year = i.get_tm_year()
+            
+            one_card = {
+                "content" : i.get_content(),
+                "images" : i.get_images(),
+                "status" : i.get_status(),
+                "id" : i.get_id()
+            }
+            one_day.append(one_card)
+        
+        one_item["items"] = one_day
+        items.append(one_item)
+
+        cards['items'] = items
+        return cards
 
     # 给卡片、状态、tags、share（Bool）
     def check_data(self, user_id, data_dict):
@@ -94,20 +163,56 @@ class Card(db.Model):
         for one in i:
             show.append(m[one])
         return show
+
     #返回一个人的所有相关卡片的信息
     def get_one_all(self,user_id):
         _all = self.query.filter_by(_Card__card_id=user_id).all()
         return _all
+
     #返回一个宠物的所有相关卡片的信息
     def get_pet_all(self,pet_id): 
         pet_all_card = self.query.filter_by(_Card__pet_id=pet_id).all()
         return pet_all_card
+
     #返回一个用户的所有可分享的卡片：
     def get_one_all_share(self,user_id):
         share_all = self.query.filter_by(_Card__user_id=user_id,_Card__card_type=1).all()
         return share_all
+
     #返回一个宠物的所有可分享的卡片：
-    def get_one_all_share(self,pet_id):
+    def get_pet_all_share(self,pet_id):
         share_pet_all = self.query.filter_by(_Card__pet_id=pet_id,_Card__card_type=1).all()
         return share_pet_all
     
+    #根据用户id判断是否可以获取卡片细节，如果是访客，user_id为guest
+    def get_detail(self, card_id):
+        information ={
+                "id" : self.__id,
+                "user_id" : self.__user_id,
+                "pet_id" : self.__pet_id,
+                "card_content" : self.__card_content,
+                "card_image_path" : self.__card_image_path,
+                "card_time" : self.__card_time,
+                "card_type" : self.__card_type,
+                "whether_share" : self.__whether_share
+        }
+        return information
+
+    def get_whether_share(self):
+        if self.__whether_share is 1:
+            return True
+        else:
+            return False
+
+    def get_time(self):
+        return self.__time
+
+    def get_tm_yday(self):
+        return time.localtime(self.get_time()).tm_yday
+
+    def get_tm_year(self):
+        return time.localtime(self.get_time()).tm_year
+    
+    def get_card_date(self):
+        return time.strftime("%m-%d",time.localtime(
+                                    self.get_time()))

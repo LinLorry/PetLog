@@ -34,22 +34,20 @@ class follow_interface(Resource):
 class user_information(Resource):
     @login_required
     def get(self):
-        return jsonify(user_information = g.user.get_information()) 
+        return jsonify(g.user.get_information())
 
 class user_other_information(Resource):
     @login_required
     def post(self):
-        return jsonify(user_information = \
-                        g.user.get_other_information(
-                            request.json['user_id']))
+        return jsonify(g.user.get_other_information
+                (request.json['user_id']))
 
 class guest_get_information(Resource):
     @checke_interface
     def post(self):
         user = User("guest")
-        return jsonify(user_information = \
-                        user.get_other_information(
-                            request.json['user_id']))
+        return jsonify(user.get_other_information
+                (request.json['user_id']))
 
 class upload_avatar(Resource):
     #上传卡片图像的类

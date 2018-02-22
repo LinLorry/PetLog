@@ -1,15 +1,16 @@
 from flask_restful import Resource
-from project.extra import login_required,checke_interface
+from flask import request,g,jsonify
 from project.Models.User import User
 from project.Models.Card import Card
-from flask import request,g,jsonify
+from project.extra import login_required,checke_interface
 
+#发布卡片的接口
 class post_card(Resource):
     #发布动态接口----------------------------
     #给卡片，时间戳13位、内容、图片（数组）、状态、tags、share（Bool）
+    #这块还要修改
     @login_required
     def post(self):
-        #这块还要修改
         if g.user.create_card(request.json):
             # 用于调试查看的
             print ("content:%s,images:" % (
@@ -22,6 +23,7 @@ class post_card(Resource):
             return jsonify(status = 0,
                         message = "failed")
 
+#点赞的接口
 class praise_interface(Resource):
     #点赞接口------------------------------
     @login_required
@@ -36,8 +38,9 @@ class praise_interface(Resource):
             return jsonify(status = 0,
                         message = "failed")
 
+#评论的接口
 class card_comment(Resource):
-    #评论接口------------------------------
+    # ------------------------------>评论接口
     #还未完成
     #回复（被回复者昵称）、是否直接评论作者（Bool）、时间戳
     @login_required
@@ -50,24 +53,75 @@ class card_comment(Resource):
         return jsonify(status = 1,
                     message = "success")
 
-class user_get_card(Resource):
-    #用户自己的动态获取接口
+# 用户获取朋友圈接口
+class u_get_circle_of_friends(Resource):
     @login_required
     def post(self):
-        friend_card = g.user.get_friend_card(request.json)
-        return jsonify(card=friend_card)
-    #卡片组：发布人头像，昵称，ID，时间，关注与否、点赞与否、内容、状态、tag、赞数、评论数、图片、卡片id、用户id
-    #关于卡片，细节多给：评论者ID、评论者头像、昵称、内容、日期
+        return jsonify(g.user.get_circle_of_friends
+                (request.json['card_id']))
 
-class get_hot_card(Resource):
+# 用户获取时间轴的接口
+class u_get_timeline(Resource):
+    @login_required
+    def post(self):
+        timeline = g.user.get_timeline(request.json['pet_id'])
+        if timeline:
+            return jsonify(timeline)
+        else:
+            return jsonify(status = 0,message = "你没有权限获取该宠物的时间轴")
+
+# 用户获取卡片的详细内容
+class u_get_card_detail(Resource):
+    @login_required
+    def post(self):
+        card_detail = g.user.get_card_detail(request.json['card_id'])
+        if card_detail:
+            return jsonify()
+        else:
+            return jsonify(status = 0,message = "你没有权限获取该动态的详细内容")
+
+# 用户获取热门动态接口
+class u_get_hot_card(Resource):
     @checke_interface
     def get(self):
-        card = Card()
-        hot_card = card.get_hot_card()
-        return jsonify(card = hot_card)
+        return jsonify(g.user.get_hot_card())
 
-class guest_get_card(Resource):
-    #访客随机获取的动态接口
+# ----------------------------->访客的接口
+
+class g_get_timeline(Resource):
+    @checke_interface
     def post(self):
-        return jsonify(status = 1,
-                    message = "success")
+        user = User(option="guest")
+        user.verify_data(request.json,"get_timeline")
+        return jsonify(g.user.get_timeline(request.json['pet_id']))
+
+# 访客获取卡片的详细内容
+class g_get_card_detail(Resource):
+    @login_required
+    def post(self):
+        card = Card()
+        return jsonify(card.get_detail(request.json['card_id']))
+
+# 访客随机获取的动态接口
+class g_get_card(Resource):
+    def post(self):
+        card = Card()
+        return jsonify(card.get_hot_card())
+
+
+#---------------->有问题的接口
+''' # 用户获取他人宠物时间轴的接口
+class user_get_other_pet_timeline(Resource):
+    @login_required
+    def post(self):
+        g.user.verify_data(request.json,"get_timeline")
+        return jsonify(g.user.get_timeline(request['pet_id'])) '''
+
+''' # 获取宠物的卡片，方法会对用户是否可以获取卡片判断
+class get_pet_card(Resource):
+    @login_required
+    def post(self):
+        return jsonify(g.user.get_pet_card(request.json['pet_id'])) '''
+
+
+
