@@ -205,8 +205,8 @@ class Card(db.Model):
     def get_detail(self, card_id, user, author):
         author = {
             "name":author.__user_nickname,
-            "id":author.__id
-            "avatar":
+            "id":author.__id,
+            "avatar":author.__avatar_path
         }
 
         information ={
