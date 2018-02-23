@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api
 from .Auths import auth,use_auth
 from .Registered import registered,verify_email, new_user_image
-from .Card import post_card,card_comment,user_get_card,get_hot_card, guest_get_card
+from .Card import post_card,card_comment,user_get_card,get_hot_card, guest_get_card, praise_interface
 from .Card_images import upload_card_image,download_card_image
 from .Business import follow_interface,upload_head_image
 from .PetBusiness import create_pet, get_user_all_pet
@@ -23,6 +23,7 @@ api.add_resource (get_user_all_pet,"/user/all_pets")
 
 api.add_resource (post_card,"/user/post_card")
 api.add_resource (card_comment,"/user/post_comment")
+api.add_resource (praise_interface,"/user/post_")
 
 api.add_resource (user_get_card,"/user/get_card")
 api.add_resource (get_hot_card,"/hot_card")

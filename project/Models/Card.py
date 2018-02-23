@@ -127,6 +127,23 @@ class Card(db.Model):
         cards['items'] = items
         return cards
 
+    def get_hot(self):
+        all_cards = self.query.all()
+        hot = {
+            "status": 1,
+            "infinited":False,
+            "cards":[]
+        }
+        try:
+            cards = random.sample(all_cards, 5)
+        except ValueError:
+            try:
+                cards = random.sample(all_cards, len(all_cards))
+                hot['infinited'] = True
+            except:
+                raise PetLog_DataError("can't get random cards")
+        
+
     # 给卡片、状态、tags、share（Bool）
     def check_data(self, user_id, data_dict):
         try:

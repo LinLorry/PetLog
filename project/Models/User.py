@@ -6,6 +6,7 @@ from .Praise import Praise
 from .Follow import Follow
 from .Comment import Comment
 from .PetLogDataError import PetLog_DataError
+from threading import Thread
 from flask import current_app
 from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
@@ -282,6 +283,11 @@ class User(db.Model):
                 return card.get_detail(card_id)
 
         return False
+
+    def get_hot_card(self):
+        card = Card()
+        hot = card.get_hot()
+        return hot
         
     # -------------------->用户的评论部分的操作
     # --------->发布评论
