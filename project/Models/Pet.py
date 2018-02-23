@@ -61,8 +61,6 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
                         'name': pet.__pet_name,
                         "avatar":pet.__pet_avatar_path})
         return all_pets
-        # 返回某用户所有的宠物id（以列表套字典的格式返回）例：[{'id':'08980','name':'奥利奥'},{'id':'87389','name':'趣多多'}]
-        # 时间轴界面会显示的有关宠物方面的信息（待补充）
 
     def check_data(self, user_id, data_dict):
         try:

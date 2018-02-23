@@ -38,7 +38,7 @@ class upload_card_image(Resource):
 class download_card_image(Resource):
     @checke_interface
     def get(self, filename):
-        if allowed_file(filename):
+        if allowed_image(filename):
             image = open(os.path.join(current_app.config['CARD_IMAGES_FOLDER'],
                                       filename))
             resp = Response(image, mimetype="image/jpeg")

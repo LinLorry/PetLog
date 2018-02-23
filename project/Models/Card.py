@@ -2,6 +2,8 @@ import uuid
 import random
 import time
 from project import db
+from .Tag import Tag
+from .Tag_with_card import Tag_with_Card
 from .PetLogDataError import PetLog_DataError
 
 class Card(db.Model):
@@ -14,6 +16,7 @@ class Card(db.Model):
     __card_image_path = db.Column(db.String(128), nullable=True)
     __card_time = db.Column(db.DateTime, nullable=False)
     __card_type = db.Column(db.String(1),nullable=False)
+    __tag_id = db.Column(db.String(256),nullable=True)
     __whether_share = db.Column(db.Integer,nullable = False)
     
     def __init__(self,card_id = None):
@@ -49,13 +52,28 @@ class Card(db.Model):
         self.__card_type = create_dict['card_type']
         
         # 以下部分为发布卡片不一样要携带的信息
-        self.__images = create_dict['images']
-        self.__tags = create_dict['tags']
+        self.set_images(create_dict['images'])
+        self.set_tags(create_dict['tags'])
         self.__whether_share = 1
         return True
 
-    def set_card_image(self, card_image):
-        pass
+    def set_images(self,images):
+        f_images = str()
+        for t in images:
+            f_images = f_images + ' ' + t
+
+        self.__images = f_images
+
+    def set_tags(self,tags):
+        tag_id = str()
+        for t in tags:
+            tag = Tag.filter_by(_Tags__name=t).all()
+            if tag is None:
+                raise PetLog_DataError("some tag don't in table!")
+            tag_id = tag_id + ' ' + tag.get_id()
+
+        self.__tag_id = tag_id
+        return tag_id
 
     def insert(self):
         # 内容记录进数据库
@@ -127,22 +145,19 @@ class Card(db.Model):
         cards['items'] = items
         return cards
 
-    def get_hot(self):
-        all_cards = self.query.all()
-        hot = {
-            "status": 1,
-            "infinited":False,
-            "cards":[]
-        }
+    def get_hot(self,cards_id):
+        cards = []
+        for id in cards_id:
+            cards.append(Card.query.filter(Card.__id == id).first())
         try:
-            cards = random.sample(all_cards, 5)
+            cards = random.sample(cards, 5)
+            return cards
         except ValueError:
             try:
-                cards = random.sample(all_cards, len(all_cards))
-                hot['infinited'] = True
+                cards = random.sample(cards, len(cards))
+                return cards
             except:
                 raise PetLog_DataError("can't get random cards")
-        
 
     # 给卡片、状态、tags、share（Bool）
     def check_data(self, user_id, data_dict):
@@ -202,13 +217,7 @@ class Card(db.Model):
         return share_pet_all
     
     #根据用户id判断是否可以获取卡片细节，如果是访客，user_id为guest
-    def get_detail(self, card_id, user, author):
-        author = {
-            "name":author.__user_nickname,
-            "id":author.__id,
-            "avatar":author.__avatar_path
-        }
-
+    def get_detail(self, card_id):
         information ={
                 "id" : self.__id,
                 "user_id" : self.__user_id,
@@ -239,3 +248,6 @@ class Card(db.Model):
     def get_card_date(self):
         return time.strftime("%m-%d",time.localtime(
                                     self.get_time()))
+                                    
+    def get_user_id(self):
+        return self.__user_id

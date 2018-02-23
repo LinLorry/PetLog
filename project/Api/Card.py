@@ -1,3 +1,4 @@
+from urllib import parse
 from flask_restful import Resource
 from flask import request,g,jsonify
 from project.Models.User import User
@@ -38,7 +39,7 @@ class praise_interface(Resource):
     def post(self):
         if (request.json['action'] == '1' or \
             request.json['action'] == '0' )and \
-            g.user.user_praise(request.json['card_id'],
+            g.user.user_praise(request.json['id'],
                                request.json['action']):
             return jsonify(status = 1,
                         message = "success")
@@ -53,13 +54,14 @@ class card_comment(Resource):
     #回复（被回复者昵称）、是否直接评论作者（Bool）、时间戳
     @login_required
     def post(self):
-        g.user.create_comment(request.json)
-        # 用于调试查看的
-        print("content:%s,images:%s" % (
-                request.json['content'],
-                request.json['bool']))
-        return jsonify(status = 1,
-                    message = "success")
+        time = g.user.create_comment(request.json)
+        if time:
+            return jsonify(status = 1,
+                        message = "success",
+                        time = time)
+        else:
+            return jsonify(status = 0,
+                        message = "failed")
 
 # 用户获取朋友圈接口
 class u_get_circle_of_friends(Resource):
@@ -81,18 +83,25 @@ class u_get_timeline(Resource):
 # 用户获取卡片的详细内容
 class u_get_card_detail(Resource):
     @login_required
-    def post(self):
-        card_detail = g.user.get_card_detail(request.json['card_id'])
+    def get(self):
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
+        card_detail = g.user.get_card_detail(re['id'])
         if card_detail:
-            return jsonify()
+            return jsonify(card_detail)
         else:
             return jsonify(status = 0,message = "你没有权限获取该动态的详细内容")
 
 # 用户获取热门动态接口
-class u_get_hot_card(Resource):
+class get_hot_card(Resource):
     @checke_interface
     def get(self):
-        return jsonify(g.user.get_hot_card())
+        try:
+            re = request.query_string.decode('utf-8')
+            re = parse.parse_qs(re)
+        except:
+            
+        return jsonify(g.user.get_hot_card(re['tag']))
 
 # ----------------------------->访客的接口
 

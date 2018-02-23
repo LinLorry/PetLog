@@ -84,7 +84,7 @@ class new_user_avatar(Resource):
             filename = m.hexdigest()[-8:8] + str3
 
             file.save (os.path.join(
-                current_app.config['USERHEAD_IMAGES_FOLDER'],
+                current_app.config['USER_AVATAR_FOLDER'],
                 filename))
             
             #文件上传成功，返回文件名

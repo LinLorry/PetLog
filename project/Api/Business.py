@@ -1,7 +1,8 @@
-import re
+
 import os
 import uuid
 from hashlib import md5
+from urllib import parse
 from flask import jsonify, g, request, current_app, Response
 from werkzeug import secure_filename
 from flask_restful import Resource
@@ -9,15 +10,11 @@ from project.Models.Follow import Follow
 from project.Models.User import User
 from project.extra import login_required, checke_interface, allowed_image
 
-re_follow = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')
-
 class follow_interface(Resource):
     @login_required
     def get(self):
-        r = re_follow.match(request.query_string.decode('utf-8'))
-
-        be_concerned_id = r.group(2)
-        follow_operation = r.group(1)
+        be_concerned_id = request.json['following_id']
+        follow_operation = request.json['action']
 
         if follow_operation == '1' and \
             g.user.user_follow(be_concerned_id,follow_operation):

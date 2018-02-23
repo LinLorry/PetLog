@@ -68,3 +68,13 @@ class Follow(db.Model):
                               'grade': people.__grade,
                               'avatar': people.__avatar_path})
         return fd_people
+
+    def check_follow(self,follower_id,following_id):
+        filters = {
+            Follow.__user_id == follower_id,
+            Follow.__be_concerned_id == following_id
+        }
+        if Follow.query.filter(*filters).first():
+            return True
+        else:
+            return False

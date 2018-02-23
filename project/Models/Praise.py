@@ -45,3 +45,13 @@ class Praise(db.Model):
             p_people.append(that_one.__user_nickname)
         return p_people
         # 返回所有赞过的人的昵称的列表（这个如果要返回更多信息待议)
+    
+    def check_praise(self,user_id,card_id):
+        filters = {
+            Praise.__user_id == user_id,
+            Praise.__card_id == card_id
+        }
+        if Praise.query.filter(*filters).first():
+            return True
+        else:
+            return False

@@ -42,6 +42,8 @@ def create_app(config_name):
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config['USER_AVATAR_FOLDER'] = os.environ.get('PETLOG_USER_AVATAR_FOLDER')
+    app.config['PET_AVATAR_FOLDER'] = os.environ.get('PETLOG_PET_AVATAR_FOLDER')
     db.init_app(app)
     
     return app
