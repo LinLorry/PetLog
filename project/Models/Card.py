@@ -202,7 +202,13 @@ class Card(db.Model):
         return share_pet_all
     
     #根据用户id判断是否可以获取卡片细节，如果是访客，user_id为guest
-    def get_detail(self, card_id):
+    def get_detail(self, card_id, user, author):
+        author = {
+            "name":author.__user_nickname,
+            "id":author.__id
+            "avatar":
+        }
+
         information ={
                 "id" : self.__id,
                 "user_id" : self.__user_id,

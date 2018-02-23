@@ -98,9 +98,9 @@ class g_get_timeline(Resource):
 # 访客获取卡片的详细内容
 class g_get_card_detail(Resource):
     @login_required
-    def post(self):
+    def get(self,card_id):
         card = Card()
-        return jsonify(card.get_detail(request.json['card_id']))
+        return jsonify(card.get_detail(card_id))
 
 # 访客随机获取的动态接口
 class g_get_card(Resource):

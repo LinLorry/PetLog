@@ -13,7 +13,11 @@ class create_pet(Resource):
 class get_user_all_pet(Resource):
     @login_required
     def get(self):
-        pet_list = g.user.get_user_pets()
+        request.query_string.decode('utf-8')
+        pet_list = {
+            "status":1,
+            "pets":g.user.get_user_pets()
+        }
         if pet_list:
             return jsonify(pet_list = pet_list)
         else:

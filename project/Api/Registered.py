@@ -1,7 +1,6 @@
 import os
 import random
 import uuid
-import md5
 from flask_restful import Resource
 from flask import jsonify,request, current_app
 from project.Models.User import User

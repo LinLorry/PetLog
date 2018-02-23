@@ -55,10 +55,12 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def user_all_pet(self, user_id):
         # 时间轴界面下获取某用户所有宠物的id
         pets = self.query.filter_by(__user_id=user_id).all()
-        all_pet = []
+        all_pets = []
         for pet in pets:
-            all_pet.append({'id': pet.__pet_id, 'name': pet.__pet_name})
-        return all_pet
+            all_pets.append({'id': pet.__pet_id, 
+                        'name': pet.__pet_name,
+                        "avatar":pet.__pet_avatar_path})
+        return all_pets
         # 返回某用户所有的宠物id（以列表套字典的格式返回）例：[{'id':'08980','name':'奥利奥'},{'id':'87389','name':'趣多多'}]
         # 时间轴界面会显示的有关宠物方面的信息（待补充）
 
