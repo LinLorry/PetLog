@@ -1,4 +1,4 @@
-from project.extra import login_required,checke_interface, allowed_file
+from project.extra import login_required,checke_interface, allowed_image
 from flask_restful import Resource
 from flask import request, current_app, g, jsonify, Response
 from werkzeug import secure_filename
@@ -14,7 +14,7 @@ class upload_card_image(Resource):
     @login_required
     def post(self):
         file = request.files['image']
-        if file and allowed_file(file.filename):
+        if file and allowed_image(file.filename):
             #str1是用户的id
             #str2是用户发布的图片数
             #str3是图片的后缀

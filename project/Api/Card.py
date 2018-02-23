@@ -2,7 +2,15 @@ from flask_restful import Resource
 from flask import request,g,jsonify
 from project.Models.User import User
 from project.Models.Card import Card
+from project.Models.Tag import Tag
 from project.extra import login_required,checke_interface
+
+#获取tags的接口
+class get_tags(Resource):
+    @checke_interface
+    def get(self):
+        tag = Tag()
+        return jsonify(tag.all_tags())
 
 #发布卡片的接口
 class post_card(Resource):

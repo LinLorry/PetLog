@@ -1,12 +1,13 @@
 import re
 import os
-import md5, uuid
+import uuid
+from hashlib import md5
 from flask import jsonify, g, request, current_app, Response
 from werkzeug import secure_filename
 from flask_restful import Resource
 from project.Models.Follow import Follow
 from project.Models.User import User
-from project.extra import login_required, checke_interface, allowed_file
+from project.extra import login_required, checke_interface, allowed_image
 
 re_follow = re.compile(r'^action\=(\d)\&lastCursor\=\$(.*)$')
 
@@ -54,7 +55,7 @@ class upload_avatar(Resource):
     @login_required
     def post(self):
         file = request.files['image']
-        if file and allowed_file(file.filename):
+        if file and allowed_image(file.filename):
             #str1是用户的id
             #str2是图片的后缀
             str1 = str(uuid.uuid1()).split("-")[0]

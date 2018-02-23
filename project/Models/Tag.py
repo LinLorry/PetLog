@@ -2,7 +2,7 @@ from project import db
 
 class Tag(db.Model):
     __tablename__ ="tags"
-    __id = db.Column(db.String(16),nullable=False)
+    __id = db.Column(db.String(16),primary_key=True,nullable=False)
     __tag_name = db.Column(db.String(32),nullable=False)
     
     def all_tags(self):
