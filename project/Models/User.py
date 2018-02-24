@@ -1,4 +1,6 @@
 import uuid
+import time
+
 from project import db
 from .Pet import Pet
 from .Tag import Tag
@@ -10,32 +12,31 @@ from .Tag_with_card import Tag_with_Card
 from .PetLogDataError import PetLog_DataError
 from threading import Thread
 from flask import current_app
-from datetime import datetime
 from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 class User(db.Model):
     __tablename__ = "users"
     __id = db.Column(db.String(16), primary_key=True, nullable=False)
+    __email = db.Column(db.String(32), unique=True, nullable=False)
     __user_nickname = db.Column(db.String(20), unique=True, nullable=False)
     __password_hash = db.Column(db.String(128), nullable=False)
-    __phonenumber = db.Column(db.String(11), unique=True)
-    __gender = db.Column(db.String(1), nullable=True)
-    __avatar_path = db.Column(db.String(128), nullable=True)
+    __gender = db.Column(db.String(6), nullable=False)
+    __avatar_path = db.Column(db.String(128), nullable=False)
     __motto = db.Column(db.String(256), nullable=True)
-    __address = db.Column(db.String(30), nullable=True)
-    __joined_time = db.Column(db.DateTime, nullable=False)
+    __address = db.Column(db.String(30), nullable=False)
+    __birth = db.Column(db.Float,nullable=True)
+    __joined_time = db.Column(db.Float, nullable=False)
     __grade = db.Column(db.Integer, nullable=False)
-    __email = db.Column(db.String(32), nullable=False)
 
     # 构造函数
     #用来构造一个访客的用户对象
     def __init__(self,content=None,option="default"):
         if option == 'id' or 'email':
             if option == 'id':
-                info = User.query.filter(User.__id = content).first()
+                info = User.query.filter(User.__id == content).first()
             elif option == 'email':
-                info = User.query.filter(User.__email = content).first()
+                info = User.query.filter(User.__email == content).first()
             self.__id = info.__id()
             self.__user_nickname = info.__user_nickname
             self.__password_hash = info.__password_hash
@@ -43,9 +44,8 @@ class User(db.Model):
             
             self.__phonenumber =info.__phonenumber
             self.__gender = info.__gender
-            
         elif option == 'default':
-            
+            pass
         elif option == 'guest':
             pass
 
@@ -104,7 +104,7 @@ class User(db.Model):
         self.__email = create_dict['email']
         self.__user_nickname = create_dict['user_nickname']
         self.password = create_dict['password']
-        self.__joined_time = datetime.utcnow()#create_dict['joined_time']
+        self.__joined_time = time.time()
         
         self.__grade = 1  # 直接赋值，初始用户等级均为1
         self.__avatar_path = create_dict['avatar_path']
@@ -112,9 +112,8 @@ class User(db.Model):
         # 对于不一定拥有的变量调用set设置器（由后端自动生成字段）
         # 有些设置器还未写,需要补充(若为空赋值为后面的结果)
 
-        self.set_address(create_dict['address'])  # 设置为未知
-        self.set_user_gender(create_dict['gender'])  # 设置为空
-        #self.set_motto(create_dict['motto'])  # 设置为此用户暂无简介
+        self.set_address(create_dict['address'])
+        self.set_user_gender(create_dict['gender'])
         return True
 
     # ---------------------->插入用户信息的方法
@@ -131,12 +130,14 @@ class User(db.Model):
                 'new_motto': '我没什么好说的，怎么还没完成',
                 'new_address': '江西上饶'}'''
 
-    def update_user(self, update_dict):
-        it = self.query.filter_by(__id=update_dict['user']).first()
-        it.__gender = update_dict['new_gender']
-        it.__avatar_path = update_dict['new_avatar']
-        it.__motto = update_dict['new_motto']
-        it.__address = update_dict['new_address']
+    def update_user(update_dict):
+        it = User.query.get(update_dict['id'])
+        it.__user_nickname = update_dict['name']
+        it.__gender = update_dict['gender']
+        it.__avatar_path = update_dict['avatar']
+        it.__motto = update_dict['motto']
+        it.__address = update_dict['location']
+        it.set_birth(update_dict['birth_day'])
         db.session.add(it)
         db.session.commit()
 
@@ -147,7 +148,7 @@ class User(db.Model):
 
     def create_pet(self, pet_dict):
         pet = Pet()
-        pet_dict = pet.check_data(self.__id, pet_dict)
+        pet_dict = pet.check_data(self.get_id(), pet_dict)
 
         if pet.create_pet(pet_dict) \
             and pet.insert():
@@ -157,7 +158,7 @@ class User(db.Model):
 
     def get_all_pets(self):
         pet = Pet()
-        pets = pet.user_all_pets(self.__id)
+        pets = pet.user_all_pets(self.get_id())
         pet_list = {
             "status":1,
             "pets":pets
@@ -174,7 +175,7 @@ class User(db.Model):
 
     def create_card(self, card_dict):
         card = Card()
-        card_dict = card.check_data(self.__id, card_dict)
+        card_dict = card.check_data(self.get_id(), card_dict)
         if card.create_card(card_dict) \
             and card.insert():
             return True
@@ -184,43 +185,34 @@ class User(db.Model):
     # -------->获取时间轴
     def get_timeline(self, pet_id):
         #需要判断用户是否可以查看这只宠物的时间轴
-        pet = Pet(pet_id = pet_id)
+        pet = Pet.query.get(pet_id)
+        if pet is None:
+            raise("Don't have this pet id!")
+        timeline ={
+            "name":pet.get_name(),
+            "age" : pet.get_age(),
+            "avatar" : pet.get_avatar(),
+            "mooto" : pet.get_motto(),
+            "items": []
+        }
         if pet.get_user_id == self.get_id():
-            card = Card()
-            timeline = card.timeline(pet)
             timeline['status'] = 1
         elif pet.get_whether_share():
-            card = Card()
-            timeline = card.timeline(pet)
             timeline['status'] = 0
         else:
             return False
+
+        timeline['items'] = Card.timeline(pet_id)
         return timeline
 
     # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
     # 朋友圈往下刷时，查找之前的朋友圈内容
     # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
     def get_circle_of_friends(self, tag_name, late_card_id):
-        '''         if late_card_id is None:
-            #如果是第一次获取朋友圈，参数还未确认
-            pass
-        else:
-            m = self.get_follow()
-            _all = []
-            show = []
-            card = Card()
-            for people in m:
-                _all.append(card.get_one_all_share(people.__id))
-            for i in len(_all):
-                while _all[i]['id'] ==late_card_id:
-                    for m in range(i,len(_all)+1):
-                        show.append(_all[m])
-            return show 
-        '''
         followings_id = Follow.get_followings_id(self.get_id())
 
         if tag_name:
-            tag_id = Tag.get_id(tag_name)
+            tag_id = Tag.get_id([tag_name])
             if tag_id is None:
                 raise PetLog_DataError("Don't has this tag:" + tag_name)
 
@@ -239,19 +231,17 @@ class User(db.Model):
         }
 
     def get_hot_card(self, tag_name):
-        tag = Tag()
         card = Card()
         follow = Follow()
         praise = Praise()
         comment = Comment()
-        tag_with_card = Tag_with_Card()
 
         if tag_name:
-            tag_id = Tag.get_id(tag_name)
+            tag_id = Tag.get_id([tag_name])
             if tag_id is None:
                 raise PetLog_DataError("Don't has this tag:" + tag_name)
             else:
-                cards_id = Tag_with_Card.get_cid_with_tid([tag_id])
+                cards_id = Tag_with_Card.get_cid_with_tid(tag_id)
             if cards_id is None:
                 raise PetLog_DataError("Don't has card with this tag :" + tag_name)
         else:
@@ -269,38 +259,6 @@ class User(db.Model):
             "cards":self.trans_card(cards)
         }
         return hot
-        '''
-         all_card = []
-
-        for card in cards:
-            user = User(content=card.get_user_id(),option= "id")
-            id = card.get_id()
-            author = {
-                "name":user.get_nickname(),
-                "id":user.get_id(),
-                "avatar":user.get_avatar(),
-                "follow":follow.check_follow(self.get_id(),user.get_id())
-            }
-            liked = praise.check_praise(self.get_id(),card.get_id())
-            post = {
-                "time":card.get_detail_date(),
-                "content":card.get_content(),
-                "status":card.get_status(),
-                "tags":Tag_with_Card.get_tid_with_cid(card.get_id()),
-                "likes":praise.find_praise_number(card.get_id()),
-                "images":card.get_images()
-            }
-            comments = comment.get_comments_with_card_number(card.get_id())
-            one_card = {
-                "id": id,
-                "author": author,
-                "liked": liked,
-                "post": post,
-                "comments": comments
-            }
-            all_card.append(one_card)
-
-            '''
 
     def trans_card(self,cards):
         all_card = []
@@ -600,4 +558,8 @@ class User(db.Model):
             self.__motto = user_motto
         return True
 
+    def set_birth(self,birth_day):
+        self.__birth = time.mktime(
+                time.strptime(birth_day,"%Y-%m-%d"))
+        return True
     # ---------------------------->设置器(set)结束

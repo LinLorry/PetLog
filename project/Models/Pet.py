@@ -6,13 +6,16 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "pets"
     __pet_id = db.Column(db.String(16), nullable=False, primary_key=True)
     __category = db.Column(db.String(32), nullable=False)
-    __detailed_category = db.Column(db.String(64), nullable=True)
+
     __pet_name = db.Column(db.String(20), nullable=False)
     __user_id = db.Column(db.String(16), nullable=False)
-    __time = db.Column(db.DateTime, nullable=False)
-    __gender = db.Column(db.String(1), nullable=False)
-    __pet_avatar_path = db.Column(db.String(128), nullable=False)
+    __birth_day = db.Column(db.DateTime, nullable=False)
+    __gender = db.Column(db.String(8), nullable=False)
+    __pet_avatar_path = db.Column(db.String(128),nullable = False)
+
     __whether_share = db.Column(db.Integer,nullable = False)
+    __motto = db.Column(db.Text,nullable = True)
+    __meet_day = db.Column(db.DateTime,nullable = False)
 
     # 宠物的构造函数，用于查找一个宠物
     def __init__(self, pet_id = None):
@@ -37,19 +40,35 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def create_pet(self, create_dict):
         # 宠物唯一id的生成
         self.__pet_id = str(uuid.uuid1()).split("-")[0]
-        self.__category = create_dict['category']
-        self.__pet_name = create_dict['pet_name']
+        self.__category = create_dict['variety']
+        self.__pet_name = create_dict['name']
         self.__user_id = create_dict['user_id']
-        self .__gender = create_dict['gender']
-        self.__time = create_dict['time']
+        self.__gender = create_dict['gender']
+        self.__birth_day = create_dict['birth_day']
         self.__whether_share = 1
+        self.__meet_day = create_dict['meet_day']
+        self.__pet_avatar_path = create_dict['avatar']
+        self.__motto = create_dict['motto']
         return True
 
     def insert(self):
         # 内容记录进数据库
         db.session.add(self)
         db.session.commit()
-        # session.close()
+        return True
+
+    def update(self,update_dict):
+        that = self.query.filter_by(_Pet__pet_id=update_dict['id']).first()
+        that.__pet_name = update_dict['name']
+        that.__motto = update_dict['motto']
+        that.__avatar = update_dict['avatar']
+        that.__gender = update_dict['gender']
+        that.__birth_day = update_dict['birth_day']
+        that.__meet_day = update_dict['meet_day']
+        that.__category = update_dict['variety']
+        db.session.add(that)
+        db.session.commit()
+        
         return True
 
     def user_all_pet(self, user_id):

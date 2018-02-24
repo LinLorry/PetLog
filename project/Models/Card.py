@@ -63,69 +63,51 @@ class Card(db.Model):
         db.session.commit()
         return True
 
-    def timeline(self, pet):
-        info = self.query.filter_by(__pet_id=pet.get_pet_id()).all()
-        cards = {
-            "name" : pet.get_name(),
-            "age" : pet.get_age(),
-            "avatar" : pet.get_avatar(),
-            "mooto" : pet.get_motto(),
-            "items" : []
-        }
-        if info is None:
-            return cards
+    def timeline(pet_id):
         items = []
-        info = sorted(info,key = lambda s: s.get_time(),
-                    reverse=True)
+        info = Card.query.filter(Card.__pet_id == pet_id).\
+                    order_by(Card.__tag_id.asc()).all()
+        if info is None:
+            return []
         
-        one_card = {
-            "content" : info[0].get_content(),
-            "images" : info[0].get_images(),
-            "status" : info[0].get_status(),
-            "id" : info[0].get_id()
-        }
-        one_day = [one_card]
-        one_item = {
-            "date" : info[0].get_card_date(),
-            "items" : [],
-            "is_year" : False
-        }
-
         day = info[0].get_tm_yday()
         year = info[0].get_tm_year()
 
+        one_day_items = []
+        one_day = {
+            "date":info[0].get_card_date(),
+            "items":one_day_items,
+            "is_year":False
+        }
+        one_year = {
+            "date":"",
+            "items":[],
+            "is_year":True,
+            "year":year
+        }
         for i in info:
-            if (i.get_tm_yday() != day) or \
-                (i.get_tm_year() != year):
-                one_item["items"] = one_day
-                items.append(one_item)
-                
-                one_day = []
-                one_item["date"] = i.get_card_date(),
-                day = i.get_tm_yday()
-                if i.get_tm_year() != year:
-                    x = {
-                        "date":"",
-                        "items":[],
-                        "is_year":True,
-                        "year":year
-                    }
-                    items.append(x)
-                    year = i.get_tm_year()
-            
             one_card = {
                 "content" : i.get_content(),
                 "images" : i.get_images(),
                 "status" : i.get_status(),
                 "id" : i.get_id()
             }
-            one_day.append(one_card)
-        
-        one_item["items"] = one_day
-        items.append(one_item)
 
-        cards['items'] = items
-        return cards
+            if (i.get_tm_yday() != day) or \
+                (i.get_tm_year() != year):
+                one_day['items'] = one_day_items
+                items.append(one_day)
+                one_day['items'] = [one_card]
+                one_day["date"] = i.get_card_date(),
+                day = i.get_tm_yday()
+                if i.get_tm_year() != year:
+                    items.append(one_year)
+                    year = i.get_tm_year()
+                    one_year['year'] = year
+            else:
+                one_day_items.append(one_card)
+
+        return items
 
     def hot(self,cards_id):
         cards = []
@@ -237,6 +219,10 @@ class Card(db.Model):
 
     def get_tm_year(self):
         return time.localtime(self.get_time()).tm_year
+
+    def get_age(self):
+        return time.localtime(time.time()).tm_year - \
+                time.localtime(self.get_time()).tm_year
     
     def get_card_date(self):
         return time.strftime("%m-%d",time.localtime(
