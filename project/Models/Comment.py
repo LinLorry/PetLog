@@ -75,5 +75,8 @@ class Comment(db.Model):
         else:
             return year + '-' + mou + '-' + day
     
-    def get_comments_with_card_number(self,card_id):
+    def get_comments_with_card_number(card_id):
         return len(Comment.query.filter(Comment.__card_id == card_id).all())
+
+    def get_comments(card_id):
+        return Comment.query.filter(Comment.__card_id == card_id).all()

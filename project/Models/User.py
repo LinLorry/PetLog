@@ -6,7 +6,7 @@ from .Card import Card
 from .Praise import Praise
 from .Follow import Follow
 from .Comment import Comment
-from .Tag_with_card import Tag_with_card
+from .Tag_with_card import Tag_with_Card
 from .PetLogDataError import PetLog_DataError
 from threading import Thread
 from flask import current_app
@@ -31,16 +31,21 @@ class User(db.Model):
     # 构造函数
     #用来构造一个访客的用户对象
     def __init__(self,content=None,option="default"):
-        if option == 'id':
-            info = self.query.filter_by(__id = content).first()
-            self.__id = info.__id
-            self.__address = info.__address
+        if option == 'id' or 'email':
+            if option == 'id':
+                info = User.query.filter(User.__id = content).first()
+            elif option == 'email':
+                info = User.query.filter(User.__email = content).first()
+            self.__id = info.__id()
             self.__user_nickname = info.__user_nickname
+            self.__password_hash = info.__password_hash
+            self.__address = info.__address
+            
             self.__phonenumber =info.__phonenumber
             self.__gender = info.__gender
-            self.__password_hash = info.__password_hash
+            
         elif option == 'default':
-            pass
+            
         elif option == 'guest':
             pass
 
@@ -112,26 +117,394 @@ class User(db.Model):
         #self.set_motto(create_dict['motto'])  # 设置为此用户暂无简介
         return True
 
-    # ---------------------------->设置器(set)
-    # 设置用户的性别的方法
-    # 查看字典是否有该属性
-
-    def set_address(self, user_address):
-        if not user_address == '':
-            self.__address = user_address
+    # ---------------------->插入用户信息的方法
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
         return True
 
-    def set_user_gender(self, user_gender):
-        if not user_gender == '':
-            self.__gender = user_gender
-        return True
+    # ---------------------->更改用户信息的方法
+    '''update_dict 为修改后的所有信息形成的字典（包含所有可以后期改动的数据信息，无论是否有改动，均重新赋值）
+    update_dict{'user': '2367821367'
+                'new_gender': '你继续猜',
+                'new_avatar': 'hiohoh',
+                'new_motto': '我没什么好说的，怎么还没完成',
+                'new_address': '江西上饶'}'''
 
-    def set_motto(self, user_motto):
-        if not user_motto == '':
-            self.__motto = user_motto
-        return True
+    def update_user(self, update_dict):
+        it = self.query.filter_by(__id=update_dict['user']).first()
+        it.__gender = update_dict['new_gender']
+        it.__avatar_path = update_dict['new_avatar']
+        it.__motto = update_dict['new_motto']
+        it.__address = update_dict['new_address']
+        db.session.add(it)
+        db.session.commit()
 
-    # ---------------------------->设置器(set)结束
+    # --------------------------->用户的操作部分
+
+    # -------------------->用户宠物部分的操作
+    # -------->新建宠物
+
+    def create_pet(self, pet_dict):
+        pet = Pet()
+        pet_dict = pet.check_data(self.__id, pet_dict)
+
+        if pet.create_pet(pet_dict) \
+            and pet.insert():
+            return pet.get_id()
+        else:
+            return False
+
+    def get_all_pets(self):
+        pet = Pet()
+        pets = pet.user_all_pets(self.__id)
+        pet_list = {
+            "status":1,
+            "pets":pets
+        }
+        return pet_list
+
+    def get_pet_detail(self,pet_id):
+        pet_detail = Pet.get_detail(pet_id)
+        return pet_detail
+
+    # -------------------->用户的卡片部分的操作
+
+    # -------->发布动态
+
+    def create_card(self, card_dict):
+        card = Card()
+        card_dict = card.check_data(self.__id, card_dict)
+        if card.create_card(card_dict) \
+            and card.insert():
+            return True
+        else:
+            return False
+    
+    # -------->获取时间轴
+    def get_timeline(self, pet_id):
+        #需要判断用户是否可以查看这只宠物的时间轴
+        pet = Pet(pet_id = pet_id)
+        if pet.get_user_id == self.get_id():
+            card = Card()
+            timeline = card.timeline(pet)
+            timeline['status'] = 1
+        elif pet.get_whether_share():
+            card = Card()
+            timeline = card.timeline(pet)
+            timeline['status'] = 0
+        else:
+            return False
+        return timeline
+
+    # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
+    # 朋友圈往下刷时，查找之前的朋友圈内容
+    # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
+    def get_circle_of_friends(self, tag_name, late_card_id):
+        '''         if late_card_id is None:
+            #如果是第一次获取朋友圈，参数还未确认
+            pass
+        else:
+            m = self.get_follow()
+            _all = []
+            show = []
+            card = Card()
+            for people in m:
+                _all.append(card.get_one_all_share(people.__id))
+            for i in len(_all):
+                while _all[i]['id'] ==late_card_id:
+                    for m in range(i,len(_all)+1):
+                        show.append(_all[m])
+            return show 
+        '''
+        followings_id = Follow.get_followings_id(self.get_id())
+
+        if tag_name:
+            tag_id = Tag.get_id(tag_name)
+            if tag_id is None:
+                raise PetLog_DataError("Don't has this tag:" + tag_name)
+
+        card_list =Card.get_followings_cards(
+                                    followings_id,
+                                    tag_id,
+                                    late_card_id)
+        if len(card_list) < 5:
+            infinited = True
+        else:
+            infinited = False
+        
+        friend = {
+            "infinited": infinited,
+            "cards": self.trans_card(card_list)
+        }
+
+    def get_hot_card(self, tag_name):
+        tag = Tag()
+        card = Card()
+        follow = Follow()
+        praise = Praise()
+        comment = Comment()
+        tag_with_card = Tag_with_Card()
+
+        if tag_name:
+            tag_id = Tag.get_id(tag_name)
+            if tag_id is None:
+                raise PetLog_DataError("Don't has this tag:" + tag_name)
+            else:
+                cards_id = Tag_with_Card.get_cid_with_tid([tag_id])
+            if cards_id is None:
+                raise PetLog_DataError("Don't has card with this tag :" + tag_name)
+        else:
+            cards_id = None
+
+        cards = card.hot(cards_id)
+
+        if len(cards) < 5:
+            infinited = True
+        else:
+            infinited = False
+
+        hot = {
+            "infinited":infinited,
+            "cards":self.trans_card(cards)
+        }
+        return hot
+        '''
+         all_card = []
+
+        for card in cards:
+            user = User(content=card.get_user_id(),option= "id")
+            id = card.get_id()
+            author = {
+                "name":user.get_nickname(),
+                "id":user.get_id(),
+                "avatar":user.get_avatar(),
+                "follow":follow.check_follow(self.get_id(),user.get_id())
+            }
+            liked = praise.check_praise(self.get_id(),card.get_id())
+            post = {
+                "time":card.get_detail_date(),
+                "content":card.get_content(),
+                "status":card.get_status(),
+                "tags":Tag_with_Card.get_tid_with_cid(card.get_id()),
+                "likes":praise.find_praise_number(card.get_id()),
+                "images":card.get_images()
+            }
+            comments = comment.get_comments_with_card_number(card.get_id())
+            one_card = {
+                "id": id,
+                "author": author,
+                "liked": liked,
+                "post": post,
+                "comments": comments
+            }
+            all_card.append(one_card)
+
+            '''
+
+    def trans_card(self,cards):
+        all_card = []
+        for card in cards:
+            user = User(content=card.get_user_id(),option= "id")
+            id = card.get_id()
+            author = {
+                "name":user.get_nickname(),
+                "id":user.get_id(),
+                "avatar":user.get_avatar(),
+                "follow":Follow.check_follow(self.get_id(),user.get_id())
+            }
+            liked = Praise.check_praise(self.get_id(),card.get_id())
+            post = {
+                "time":card.get_detail_date(),
+                "content":card.get_content(),
+                "status":card.get_status(),
+                "tags":Tag.get_name(
+                        [Tag_with_Card.get_tid_with_cid(
+                            card.get_id())]),
+                "likes":Praise.find_praise_number(card.get_id()),
+                "images":card.get_images()
+            }
+            comments = Comment.get_comments_with_card_number(card.get_id())
+            one_card = {
+                "id": id,
+                "author": author,
+                "liked": liked,
+                "post": post,
+                "comments": comments
+            }
+            all_card.append(one_card)
+        return all_card
+
+    def get_card_detail(self, card_id):
+        card = Card(card_id)
+        if card.get_card_id() is self.get_id():
+            author = self
+            post = card.get_detail(card_id)
+        elif card.get_whether_share():
+            pet = Pet(pet_id = card.get_pet_id())
+            if pet.get_whether_share:
+                author = User(card.get_user_id())
+                post = card.get_detail(card_id)
+        else:
+            return False
+
+        author_detail = {
+            "name":author.get_nickname(),
+            "id":author.get_id(),
+            "avatar":author.get_avatar(),
+            "follow":Follow.check_follow(self.get_id(),author.get_id())
+        }
+        detail = {
+            "id":self.get_id(),
+            "author":author_detail,
+            "liked":Praise.check_praise(self.get_id(),card_id),
+            "post":post,
+            "comments":Comment.get_comments(card_id)
+        }
+        return detail
+        
+    # -------------------->用户的评论部分的操作
+    # --------->发布评论
+
+    def create_comment(self, comment_dict):
+        comment = Comment()
+        comment_dict['user_id'] = self.__id
+        comment_dict = comment.check_comment(self.__id, comment_dict)
+        if comment.comment_on_card(comment_dict) \
+            and comment.insert():
+            return comment.get_tm_date()
+        else:
+            return False
+
+    # -------------------->用户的点赞部分的操作
+    # --------->点赞和取消点赞
+
+    def user_praise(self, be_praise_card_id, praise_operation):
+        praise = Praise()
+        if praise_operation == '1':
+            return praise.create_praise(self.__id, be_praise_card_id)
+        elif praise_operation == '0':
+            return praise.del_praise(self.__id, be_praise_card_id)
+        else:
+            return False
+    
+    # --------------------->用户的关注部分的操作
+    # --------->关注和取消关注
+
+    def user_follow(self, be_concerned_id, follow_operation):
+        follow = Follow()
+        if follow_operation == '1':
+            return follow.create_follow(self.__id, be_concerned_id)
+        elif follow_operation == '0':
+            return follow.del_follow(self.__id, be_concerned_id)
+        else:
+            return False
+
+    def get_followers(self):
+        follow = Follow()
+        followers_id = follow.get_followers(self.get_id())
+        followers = []
+        
+        for id in followers_id:
+            user = User.get(id)
+            follower = {
+                "name":user.get_nickname(),
+                "id":user.get_id(),
+                "avatar":user.get_avatar(),
+                "motto":user.get_motto(),
+                "followed":Follow.check_follow(self.get_id(),user.get_id())
+            }
+            followers.append(follower)
+
+        return followers
+
+    # --------->获取用户关注用户
+    def get_followings(self):
+        follow = Follow()
+        followings_id = follow.get_followings_id(self.get_id())
+        followings = []
+
+        for id in followings_id:
+            user = User.get(id)
+            following = {
+                "name":user.get_nickname(),
+                "id":user.get_id(),
+                "avatar":user.get_avatar(),
+                "motto":user.get_motto(),
+                "followed":Follow.check_follow(self.get_id(),user.get_id())
+            }
+            followings.append(following)
+
+        return followings
+
+
+    # --------------------------->用户操作部分结束
+
+    # --------------------------->用户属性部分
+
+    def get_profile_summary(self):
+        user = {
+            "name": self.get_nickname(),
+            "avatar": self.get_avatar(),
+            "followers": Follow.get_followers_number(self.get_id()),
+            "followings": Follow.get_followings_number(self.get_id()),
+            "motto":self.get_motto()
+        }
+        return user
+
+    def get_profile(self):
+        user = {
+            "name": self.get_id(),
+            "avatar": self.get_avatar(),
+            "motto":self.get_motto(),
+            "gender": self.get_gender(),
+            "birth_day": self.get_birth_day(),
+            "location": self.get_location()
+        }
+        return user
+
+    #获取他人的信息，user_id是查找的用户id
+    def get_other_profile(self,user_id):
+        other = User(content=user_id,option="id")
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    # 稍微修改了密码的hash算法
+    # 密码hash用"密码+用户名+salt"的方法来算
+    @password.setter
+    def password(self, password):
+        self.__password_hash = pwd_context.encrypt(password +
+                                                   current_app.config['SALT'] +
+                                                   self.__id)
+
+    # 校验密码方法
+    def verify_password(self, password):
+        return pwd_context.verify(password +
+                                  current_app.config['SALT'] +
+                                  self.__id,
+                                  self.__password_hash)
+
+
+
+    # --------------------------->用户属性部分结束
+
+
+    # 获取token的方法，默认时间是10分钟(10*60秒)
+    # 密钥使用配置属性，配置属性来自系统变量在project.__init__.py里
+    # 加上用户名好在检查token结束后，构造用户对象
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(current_app.config['SECRET_KEY'],
+                       expires_in=expiration)
+        return s.dumps({'id': self.__id,
+                        'email': self.__email})
+
+    # 计算用户当前等级的方法
+    def grade_now(self, grade, user_id, comment_number, praise_number):
+
+            # 具体计算待定
+        return grade
 
     # ------------------------>查找用户的方法(通过昵称搜索用户)
 
@@ -188,298 +561,43 @@ class User(db.Model):
         self.__email = info.__email
         return True
 
-    # ---------------------->插入用户信息的方法
-    def insert(self):
-        db.session.add(self)
-        db.session.commit()
-        return True
+    # ---------------------------->get
 
-    # ---------------------->更改用户信息的方法
-    '''update_dict 为修改后的所有信息形成的字典（包含所有可以后期改动的数据信息，无论是否有改动，均重新赋值）
-    update_dict{'user': '2367821367'
-                'new_gender': '你继续猜',
-                'new_avatar': 'hiohoh',
-                'new_motto': '我没什么好说的，怎么还没完成',
-                'new_address': '江西上饶'}'''
-
-    def update_user(self, update_dict):
-        it = self.query.filter_by(__id=update_dict['user']).first()
-        it.__gender = update_dict['new_gender']
-        it.__avatar_path = update_dict['new_avatar']
-        it.__motto = update_dict['new_motto']
-        it.__address = update_dict['new_address']
-        db.session.add(it)
-        db.session.commit()
-
-    # --------------------------->用户的操作部分
-
-    # -------------------->用户宠物部分的操作
-    # -------->新建宠物
-
-    def create_pet(self, pet_dict):
-        pet = Pet()
-        pet_dict = pet.check_data(self.__id, pet_dict)
-        if pet.create_pet(pet_dict) \
-            and pet.insert():
-            return True
-        else:
-            return False
-
-    def get_all_pets(self):
-        pet = Pet()
-        pets = pet.user_all_pets(self.__id)
-        pet_list = {
-            "status":1,
-            "pets":pets
-        }
-        return pet_list
-
-    # -------------------->用户的卡片部分的操作
-    # -------->获取时间轴
-    def get_timeline(self, pet_id):
-        #需要判断用户是否可以查看这只宠物的时间轴
-        pet = Pet(pet_id = pet_id)
-        if pet.get_user_id == self.__id:
-            card = Card()
-            timeline = card.timeline(pet)
-            timeline['status'] = 1
-        elif pet.get_whether_share():
-            card = Card()
-            timeline = card.timeline(pet)
-            timeline['status'] = 0
-        else:
-            return False
-        return timeline
-
-    # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
-    # 朋友圈往下刷时，查找之前的朋友圈内容
-    # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
-    def get_circle_of_friends(self, late_card_id):
-        if late_card_id is None:
-            #如果是第一次获取朋友圈，参数还未确认
-            pass
-        else:
-            m = self.get_follow()
-            _all = []
-            show = []
-            card = Card()
-            for people in m:
-                _all.append(card.get_one_all_share(people.__id))
-            for i in len(_all):
-                while _all[i]['id'] ==late_card_id:
-                    for m in range(i,len(_all)+1):
-                        show.append(_all[m])
-            return show
-
-    # -------->发布动态
-
-    def create_card(self, card_dict):
-        card = Card()
-        card_dict = card.check_data(self.__id, card_dict)
-        if card.create_card(card_dict) \
-            and card.insert():
-            return True
-        else:
-            return False
-
-    def get_card_detail(self, card_id):
-        card = Card(card_id)
-        if card.get_card_id() is self.__id:
-            author = self
-            post = card.get_detail(card_id)
-        elif card.get_whether_share():
-            pet = Pet(pet_id = card.get_pet_id())
-            if pet.get_whether_share:
-                author = User(card.get_user_id())
-                post = card.get_detail(card_id)
-        else:
-            return False
-
-        follow = Follow()
-        praise = Praise()
-        comment = Comment()
-
-        author_detail = {
-            "name":author.get_nickname(),
-            "id":author.get_id(),
-            "avatar":author.get_avatar(),
-            "follow":follow.whether(self.__id,author.__id)
-        }
-        detail = {
-            "id":self.__id,
-            "author":author_detail,
-            "liked":praise.whether(self.__id,card_id),
-            "post":post,
-            "comments":comment
-        }
-        return detail
-
-    def get_hot_card(self, tag_name):
-        tag = Tag()
-        card = Card()
-        follow = Follow()
-        praise = Praise()
-        comment = Comment()
-        tag_with_card = Tag_with_card()
-
-        if tag_name:
-            tag_id = tag.get_id(tag_name)
-            if tag_id is None:
-                raise PetLog_DataError("Don't has this tag:" + tag_name)
-            else:
-                cards_id = tag_with_card.get_cid_with_tid(tag_id)
-            if cards_id is None:
-                raise PetLog_DataError("Don't has card with this tag :" + tag_name)
-        else:
-            cards_id = None
-
-        cards = card.get_hot(cards_id)
-        all_card = []
-
-        for card in cards:
-            user = User(content=card.get_user_id(),option= "id")
-            id = card.get_id()
-            author = {
-                "name":user.get_nickname(),
-                "id":user.get_id(),
-                "avatar":user.get_avatar(),
-                "follow":follow.check_follow(self.get_id(),user.get_id())
-            }
-            liked = praise.check_praise(self.get_id(),card.get_id())
-            post = {
-                "time":card.get_detail_date(),
-                "content":card.get_content(),
-                "status":card.get_status(),
-                "tags":Tag_with_card.get_tid_with_cid(card.get_id()),
-                "likes":praise.find_praise_number(card.get_id()),
-                "images":card.get_images()
-            }
-            comments = comment.get_comments_with_card_number(card.get_id())
-            one_card = {
-                "id": id,
-                "author": author,
-                "liked": liked,
-                "post": post,
-                "comments": comments
-            }
-            all_card.append(one_card)
-            if len(cards) < 5:
-                infinited = True
-            else:
-                infinited = False
-
-            hot = {
-                "status":1,
-                "infinited":infinited,
-                "cards":all_card
-            }
-        return hot
-        
-    # -------------------->用户的评论部分的操作
-    # --------->发布评论
-
-    def create_comment(self, comment_dict):
-        comment = Comment()
-        comment_dict['user_id'] = self.__id
-        comment_dict = comment.check_comment(self.__id, comment_dict)
-        if comment.comment_on_card(comment_dict) \
-            and comment.insert():
-            return comment.get_tm_date()
-        else:
-            return False
-
-    # -------------------->用户的点赞部分的操作
-    # --------->点赞和取消点赞
-
-    def user_praise(self, be_praise_card_id, praise_operation):
-        praise = Praise()
-        if praise_operation == '1':
-            return praise.create_praise(self.__id, be_praise_card_id)
-        elif praise_operation == '0':
-            return praise.del_praise(self.__id, be_praise_card_id)
-        else:
-            return False
-    
-    # --------------------->用户的关注部分的操作
-    # --------->关注和取消关注
-
-    def user_follow(self, be_concerned_id, follow_operation):
-        follow = Follow()
-        if follow_operation == '1':
-            return follow.create_follow(self.__id, be_concerned_id)
-        elif follow_operation == '0':
-            return follow.del_follow(self.__id, be_concerned_id)
-        else:
-            return False
-
-    # --------->获取用户关注用户
-    def get_follow(self):
-        follow = Follow()
-        follow_dict = follow.find_followed_people(self.__id)
-        return follow_dict
-
-    # --------------------------->用户操作部分结束
-
-    # --------------------------->用户属性部分
-    # ---------->获取自己的信息
-
-    
-    #获取他人的信息，user_id是查找的用户id
-    def get_other_information(self,user_id):
-        pass
-
-    @property
-    def password(self):
-        raise AttributeError('password is not a readable attribute')
-
-    # 稍微修改了密码的hash算法
-    # 密码hash用"密码+用户名+salt"的方法来算
-    @password.setter
-    def password(self, password):
-        self.__password_hash = pwd_context.encrypt(password +
-                                                   current_app.config['SALT'] +
-                                                   self.__id)
-
-    # 校验密码方法
-    def verify_password(self, password):
-        return pwd_context.verify(password +
-                                  current_app.config['SALT'] +
-                                  self.__id,
-                                  self.__password_hash)
-
-    def get_information(self):
-        information = {
-                    'id':self.__id,
-                    'nickname': self.__user_nickname,
-                    'gender': self.__gender,
-                    'avator': self.__avatar_path,
-                    'motto': self._motto,
-                    'address': self._address,
-                    'grade': self.__grade
-                    }
-        
-        return information
-
-    # 返回用户的名字的方法
     def get_nickname(self):
         return self.__user_nickname
 
-    # 返回用户id的方法
     def get_id(self):
         return self.__user_id
 
-    # --------------------------->用户属性部分结束
-    # 获取token的方法，默认时间是10分钟(10*60秒)
-    # 密钥使用配置属性，配置属性来自系统变量在project.__init__.py里
-    # 加上用户名好在检查token结束后，构造用户对象
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(current_app.config['SECRET_KEY'],
-                       expires_in=expiration)
-        return s.dumps({'id': self.__id,
-                        'email': self.__email})
+    def get_motto(self):
+        if self.__motto:
+            return self.__motto
+        else:
+            return "空"
+    
+    def get_avatar(self):
+        return self.__avatar_path
 
-    # 计算用户当前等级的方法
-    def grade_now(self, grade, user_id, comment_number, praise_number):
+    def get_gender(self):
+        return self.__gender
 
-            # 具体计算待定
-        return grade
+    # ---------------------------->get结束
+
+    # ---------------------------->设置器(set)
+
+    def set_address(self, user_address):
+        if not user_address == '':
+            self.__address = user_address
+        return True
+
+    def set_user_gender(self, user_gender):
+        if not user_gender == '':
+            self.__gender = user_gender
+        return True
+
+    def set_motto(self, user_motto):
+        if not user_motto == '':
+            self.__motto = user_motto
+        return True
+
+    # ---------------------------->设置器(set)结束

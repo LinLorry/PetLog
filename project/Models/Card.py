@@ -57,24 +57,6 @@ class Card(db.Model):
         self.__whether_share = 1
         return True
 
-    def set_images(self,images):
-        f_images = str()
-        for t in images:
-            f_images = f_images + ' ' + t
-
-        self.__images = f_images
-
-    def set_tags(self,tags):
-        tag_id = str()
-        for t in tags:
-            tag = Tag.filter_by(_Tags__name=t).all()
-            if tag is None:
-                raise PetLog_DataError("some tag don't in table!")
-            tag_id = tag_id + ' ' + tag.get_id()
-
-        self.__tag_id = tag_id
-        return tag_id
-
     def insert(self):
         # 内容记录进数据库
         db.session.add(self)
@@ -145,7 +127,7 @@ class Card(db.Model):
         cards['items'] = items
         return cards
 
-    def get_hot(self,cards_id):
+    def hot(self,cards_id):
         cards = []
         for id in cards_id:
             cards.append(Card.query.filter(Card.__id == id).first())
@@ -195,6 +177,17 @@ class Card(db.Model):
         for one in i:
             show.append(m[one])
         return show
+
+    def get_followings_cards(follows_ids,tag_id,late_card_id):
+        qu = Card.query.filter(Card.__user_id.in_(follows_ids))
+        if tag_id :
+            qu = qu.join(Tag_with_Card,Card.__id==Tag_with_Card.__card_id).\
+                        filter(Tag_with_Card.__tag_id == tag_id)
+        if late_card_id:
+            qu = qu.filter(Card.__card_time < (Card.query.filter(
+                            Card.__id == late_card_id).first().get_time()))
+
+        return qu.order_by(Card.__card_time.asc()).limit(5).all()
 
     #返回一个人的所有相关卡片的信息
     def get_one_all(self,user_id):
@@ -251,3 +244,21 @@ class Card(db.Model):
                                     
     def get_user_id(self):
         return self.__user_id
+
+    def set_images(self,images):
+        f_images = str()
+        for t in images:
+            f_images = f_images + ' ' + t
+
+        self.__images = f_images
+
+    def set_tags(self,tags):
+        tag_id = str()
+        for t in tags:
+            tag = Tag.filter_by(_Tags__name=t).all()
+            if tag is None:
+                raise PetLog_DataError("some tag don't in table!")
+            tag_id = tag_id + ' ' + tag.get_id()
+
+        self.__tag_id = tag_id
+        return tag_id

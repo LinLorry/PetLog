@@ -35,17 +35,17 @@ class Follow(db.Model):
         else:
             return True
 
-    def find_follow_number(self, user_id):  # 查找该用户关注的用户的数量为
-        _all = self.query.filter_by(__user_id=user_id).all()
-        f_number = len(_all)
-        return f_number
+    def get_followers_number(user_id):  # 查找有多少人关注该用户
+        _all = Follow.query.filtee(Follow.__be_concerned_id == user_id)
+        fer_number = len(_all)
+        return fer_number
 
-    def find_followed_number(self, user_id):  # 查找有多少人关注该用户
-        _all = self.query.filter_by(__be_concerned_id=user_id)
-        fd_number = len(_all)
-        return fd_number
+    def get_followings_number(user_id):  # 查找该用户关注的用户的数量为
+        _all = Follow.query.filter(Follow.__user_id == user_id).all()
+        fing_number = len(_all)
+        return fing_number
 
-    def show_follow_people(self, user_id):  # 显示出该用户关注的用户的初略信息
+    ''' def get_followings(user_id):  # 显示出该用户关注的用户的初略信息
         from .User import User
         _all = self.query.filter_by(__user_id=user_id).all()
         f_people = []
@@ -53,10 +53,29 @@ class Follow(db.Model):
             people = User.query.filter_by(__user_id=a.__user_id).first()
             f_people.append({'nickname': people.__user_nickname,
                              'grade': people.__grade,
-                             'avatar': people.__avatar_path})
-        # 返回的信息为：[{},{},{}]这样的形式，每个字典里为一个用户的初略信息。（返回初略的信息的内容待定）
-        # 下面的方法返回的信息的格式同理。
+                             'avatar': people.__avatar_path}) 
         return f_people
+
+        followings = Follow.query.filter(Follow.__user_id == user_id).all()
+        followings_detail = []
+        for following in followings:
+            one_following = {
+                "name":following.get_name()
+            }
+        # 返回的信息为：[{},{},{}]这样的形式，每个字典里为一个用户的初略信息。（返回初略的信息的内容待定）
+        # 下面的方法返回的信息的格式同理。 '''
+    
+    def get_followers_id(user_id):
+        followers_id = []
+        for follower in Follow.query.filter(Follow.__be_concerned_id == user_id).all():
+            followers_id.append(follower.get_follower_id())
+        return followers_id
+
+    def get_followings_id(user_id):
+        followings_id = []
+        for following in Follow.query.filter(Follow.__user_id == user_id).all():
+            followings_id.append(following.get_following_id())
+        return followings_id
 
     def find_followed_people(self, user_id):  # 显示出该用户被哪些人关注的初略信息
         from .User import User
@@ -69,12 +88,10 @@ class Follow(db.Model):
                               'avatar': people.__avatar_path})
         return fd_people
 
-    def check_follow(self,follower_id,following_id):
-        filters = {
+    def check_follow(follower_id,following_id):
+        if Follow.query.filter(
             Follow.__user_id == follower_id,
-            Follow.__be_concerned_id == following_id
-        }
-        if Follow.query.filter(*filters).first():
+            Follow.__be_concerned_id ==following_id).first():
             return True
         else:
             return False

@@ -33,23 +33,21 @@ def login_required(func):
             try:
                 data = s.loads(token)
             except SignatureExpired:
-                return None # valid token, but expired
+                return False # valid token, but expired
             except BadSignature:
-                return None # invalid token
-            g.user = User()
-            g.user.find_user_by_id(data['id'])
-            #g.user.find_user(data['email'])
+                return False # invalid token
+            g.user = User.query.get(data['id'])
             return True
             
         token = request.headers.get("Authorization")
 
         if not token:
-            return jsonify(status = 0,message = "failed")
+            return jsonify(status = 0,message = "请重新登录")
         else :
             if verify_auth_token(token):
                 return func(*args, **kwargs)
             else:
-                return jsonify(status = 0,message = "failed") 
+                return jsonify(status = 0,message = "请重新登录") 
     return inner
 
 def send_async_email(app,msg):

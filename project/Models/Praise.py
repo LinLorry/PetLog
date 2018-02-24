@@ -32,8 +32,8 @@ class Praise(db.Model):
         else:
             return True
 
-    def find_praise_number(self, card_id):  # 查找某卡片的获赞的数量
-        _all = self.query.filter_by(__card_id=card_id).all()
+    def find_praise_number(card_id):  # 查找某卡片的获赞的数量
+        _all = Praise.query.filter(Praise.__card_id == card_id).all()
         p_number = len(_all)
         return p_number
 
@@ -46,12 +46,9 @@ class Praise(db.Model):
         return p_people
         # 返回所有赞过的人的昵称的列表（这个如果要返回更多信息待议)
     
-    def check_praise(self,user_id,card_id):
-        filters = {
-            Praise.__user_id == user_id,
-            Praise.__card_id == card_id
-        }
-        if Praise.query.filter(*filters).first():
+    def check_praise(user_id,card_id):
+        if Praise.query.filter(Praise.__user_id == user_id,
+                                Praise.__card_id == card_id).first():
             return True
         else:
             return False

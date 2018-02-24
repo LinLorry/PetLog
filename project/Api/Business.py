@@ -29,10 +29,47 @@ class follow_interface(Resource):
         else:
             return jsonify(status=0, message="failed")
 
-class user_information(Resource):
+class get_followers(Resource):
     @login_required
     def get(self):
-        return jsonify(g.user.get_information())
+        followers = g.user.get_followers()
+        return jsonify(
+            status = 1,
+            message = "获取成功",
+            followers = followers
+            )
+            
+class get_followings(Resource):
+    @login_required
+    def get(self):
+        followings = g.user.get_followings()
+        return jsonify(
+            status = 1,
+            message = "获取成功",
+            followings = followings
+        )
+
+class user_profile_summary(Resource):
+    @login_required
+    def get(self):
+        profile_summary = g.user.get_profile_summary()
+        res = {
+            "status": 1,
+            "message":"获取成功",
+            "user":profile_summary
+        }
+        return jsonify(res)
+
+class user_profile(Resource):
+    @login_required
+    def get(self):
+        profile = g.user.get_profile()
+        res = {
+            "status": 1,
+            "message": "获取成功",
+            "user1": profile
+        }
+        return jsonify(res)
 
 class user_other_information(Resource):
     @login_required

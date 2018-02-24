@@ -11,7 +11,12 @@ class get_tags(Resource):
     @checke_interface
     def get(self):
         tag = Tag()
-        return jsonify(tag.all_tags())
+        all_tag = tag.all_tags()
+        re = {
+            "status":1,
+            "tags":all_tag
+        }
+        return jsonify(re)
 
 #发布卡片的接口
 class post_card(Resource):
@@ -67,8 +72,21 @@ class card_comment(Resource):
 class u_get_circle_of_friends(Resource):
     @login_required
     def post(self):
-        return jsonify(g.user.get_circle_of_friends
-                (request.json['card_id']))
+
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
+        try:
+            re['tag']
+        except KeyError:
+            re['tag'] = None
+        try:
+            re['lastCursor']
+        except KeyError:
+            re['lastCursor']=None
+            
+        c_o_f = g.user.get_circle_of_friends(re['tag'],re['lastCursor'])
+        c_o_f['status'] = 1
+        return jsonify(c_o_f)
 
 # 用户获取时间轴的接口
 class u_get_timeline(Resource):
@@ -96,12 +114,15 @@ class u_get_card_detail(Resource):
 class get_hot_card(Resource):
     @checke_interface
     def get(self):
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
         try:
-            re = request.query_string.decode('utf-8')
-            re = parse.parse_qs(re)
-        except:
-            
-        return jsonify(g.user.get_hot_card(re['tag']))
+            re['tag']
+        except KeyError:
+            re['tag'] = None
+        hot = g.user.get_hot_card(re['tag'])
+        hot['status'] = 1
+        return jsonify(hot)
 
 # ----------------------------->访客的接口
 

@@ -57,9 +57,9 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         pets = self.query.filter_by(__user_id=user_id).all()
         all_pets = []
         for pet in pets:
-            all_pets.append({'id': pet.__pet_id, 
-                        'name': pet.__pet_name,
-                        "avatar":pet.__pet_avatar_path})
+            all_pets.append({'id': pet.get_id(), 
+                        'name': pet.get_name(),
+                        "avatar":pet.get_avatar()})
         return all_pets
 
     def check_data(self, user_id, data_dict):
@@ -102,6 +102,20 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
         #......不止这些还有其他的内容
         return True
+    
+    def get_detail(pet_id):
+        info = Pet.get(pet_id)
+        detail ={
+            "name": info.get_id(),
+            "motto": info.get_motto(),
+            "avatar": info.get_avatar(),
+            "gender": info.get_gender(),
+            "birth_day": info.get_birth(),
+            "meet_day": info.get_meet(),
+            "variety": info.get_category()
+        }
+        return detail
+
 
     def get_whether_share(self):
         if self.get_whether_share is 1:
@@ -111,3 +125,12 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             
     def get_user_id(self):
         return self.__user_id
+
+    def get_id(self):
+        return self.__pet_id
+
+    def get_name(self):
+        return self.__pet_name
+
+    def get_avatar(self):
+        return self.__pet_avatar_path

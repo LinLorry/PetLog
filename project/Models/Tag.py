@@ -5,7 +5,7 @@ class Tag(db.Model):
     __id = db.Column(db.String(16),primary_key=True,nullable=False)
     __tag_name = db.Column(db.String(32),nullable=False)
     
-'''     def __init__(self,tag_name = None,tag_id =None):
+    ''' def __init__(self,tag_name = None,tag_id =None):
         if not tag_id :
             info = self.query.filter(Tag.__id == tag_id).first()
             self.__id = info.__id
@@ -22,8 +22,8 @@ class Tag(db.Model):
             all_content.append(nei['__tag_name'])
         return all_content
     
-    def get_id(self,tag_name):
-        return Tag.query.filter(Tag.__tag_name = tag_name).first()
+    def get_id(tag_name):
+        return Tag.query.filter(Tag.__tag_name.in_(tag_name)).first()
 
-    def get_name(self,tag_id):
-        return Tag.query.filter(Tag.__id = tag_id).first()
+    def get_name(tag_id):
+        return Tag.query.filter(Tag.__id.in_(tag_id)).first()

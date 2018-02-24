@@ -1,6 +1,7 @@
 import uuid
 import os
 from hashlib import md5
+from urllib import parse
 from flask_restful import Resource
 from flask import jsonify, g, request, current_app
 from project.extra import login_required,allowed_image
@@ -9,8 +10,9 @@ from werkzeug import secure_filename
 class create_pet(Resource):
     @login_required
     def post(self):
-        if g.user.create_pet(request.json):
-            return jsonify(status = 1, message = "success", pet_id = "")
+        pet_id = g.user.create_pet(request.json)
+        if pet_id:
+            return jsonify(status = 1, message = "success", id = pet_id)
         else :
             return jsonify(status = 0, message = "failed")
 
@@ -50,4 +52,7 @@ class new_pet_avatar(Resource):
 
 class get_pet_detail(Resource):
     def get(self):
-        pass                
+        re = request.query_string.decode('utf-8')
+        id = parse.parse_qs(re)['id']
+        pet_detail = g.user.get_pet_detail(id)
+        return jsonify(pet_detail)

@@ -14,8 +14,8 @@ class Tag_with_Card(db.Model):
         db.session.commit()
         return True
 
-    def get_cid_with_tid(self,tag_id):
+    def get_cid_with_tid(tag_id):
         return Tag_with_Card.query.filter(Tag_with_Card.__tag_id == tag_id).all()
 
-    def get_tid_with_cid(self,card_id):
+    def get_tid_with_cid(card_id):
         return Tag_with_Card.query.filter(Tag_with_Card.__card_id == card_id).all()
