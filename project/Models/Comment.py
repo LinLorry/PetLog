@@ -7,12 +7,12 @@ from .PetLogDataError import PetLog_DataError
 
 class Comment(db.Model):
     __tablename__ = "comments"
-    __id = db.Column(db.String(16), primary_key=True, nullable=False)
-    __card_id = db.Column(db.String(16), nullable=False)
-    __user_id = db.Column(db.String(16), nullable=False)
-    __reply_id = db.Column(db.String(16), nullable=True)
-    __comment_content = db.Column(db.Text, nullable=False)
-    __comment_time = db.Column(db.String(20),nullable=False)
+    id = db.Column(db.String(16), primary_key=True, nullable=False)
+    card_id = db.Column(db.String(16), nullable=False)
+    user_id = db.Column(db.String(16), nullable=False)
+    reply_id = db.Column(db.String(16), nullable=True)
+    comment_content = db.Column(db.Text, nullable=False)
+    comment_time = db.Column(db.String(20),nullable=False)
     
     #------>发布卡片的部分
     def comment_on_card(self, comment_card_dict):
@@ -21,20 +21,20 @@ class Comment(db.Model):
                                 'to_user_id':'79980980',
                                 'commtent_content':'真的有点很烦呢。'}'''
 
-        self.__id = str(uuid.uuid1()).split("-")[0]
-        self.__card_id = comment_card_dict['card_id']
-        self.__user_id = comment_card_dict['user_id']
-        self.__comment_content = comment_card_dict['content']
+        self.id = str(uuid.uuid1()).split("-")[0]
+        self.card_id = comment_card_dict['card_id']
+        self.user_id = comment_card_dict['user_id']
+        self.comment_content = comment_card_dict['content']
         self.set_reply_id(comment_card_dict)
-        self.__comment_time = comment_card_dict['comment_time']
+        self.comment_time = comment_card_dict['comment_time']
 
         return True
 
     def set_reply_id(self,dict):
         if dict['to_author']:
-            self.__reply_id = None
+            self.reply_id = None
         else:
-            self.__reply_id = dict['reply_id']
+            self.reply_id = dict['reply_id']
 
     def check_data(self, user_id, data_dict):
         try:
@@ -66,20 +66,26 @@ class Comment(db.Model):
 
     #----->查看某卡片的所有评论
     def card_all_comment(self,card_id):
-        all = self.query.filter_by(_Comment__card_id=card_id).all()
+        all = self.query.filter_by(_Commentcard_id=card_id).all()
         peo = []
         for one in all:
-            a = User.query.filter_by(_User__id =one.__user_id).first()
-            peo.append({"author":"ome","id":one.__id,"reply_to":one.__to_user_id,"time":one.__comment_time,"content":one.__comment_content})
+            a = User.query.filter_by(id =one.user_id).first()
+            peo.append({
+                "author":"ome",
+                "id":one.id,
+                "reply_to":one.to_user_id,
+                "time":one.comment_time,
+                "content":one.comment_content
+                })
         return peo
     
     #------>获取某条评论的发布者id
     def comment_user(self,comment_id):
-        one = self.query.filter_by(_Comment__id=comment_id).first()
+        one = self.query.filter_by(_Commentid=comment_id).first()
         return one
     
     def get_time(self):
-        return self.__comment_time
+        return self.comment_time
 
     def get_tm_date(self):
         year = time.localtime(self.get_time()).tm_year
@@ -91,7 +97,7 @@ class Comment(db.Model):
             return year + '-' + mou + '-' + day
     
     def get_comments_with_card_number(card_id):
-        return len(Comment.query.filter(Comment.__card_id == card_id).all())
+        return len(Comment.query.filter(Comment.card_id == card_id).all())
 
     def get_comments(card_id):
-        return Comment.query.filter(Comment.__card_id == card_id).all()
+        return Comment.query.filter(Comment.card_id == card_id).all()

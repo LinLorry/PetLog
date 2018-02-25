@@ -26,11 +26,6 @@ class post_card(Resource):
     @login_required
     def post(self):
         if g.user.create_card(request.json):
-            # 用于调试查看的
-            print ("content:%s,images:" % (
-                    request.json['content']) +
-                    request.json['images'])
-
             return jsonify(status = 1,
                         message = "success")
         else:
@@ -93,6 +88,8 @@ class u_get_timeline(Resource):
     @login_required
     def post(self):
         timeline = g.user.get_timeline(request.json['pet_id'])
+        timeline['status'] = 1
+        timeline['message'] = "获取成功"
         if timeline:
             return jsonify(timeline)
         else:
@@ -110,7 +107,7 @@ class u_get_card_detail(Resource):
         else:
             return jsonify(status = 0,message = "你没有权限获取该动态的详细内容")
 
-# 用户获取热门动态接口
+# 热门动态接口
 class get_hot_card(Resource):
     @checke_interface
     def get(self):
@@ -120,7 +117,8 @@ class get_hot_card(Resource):
             re['tag']
         except KeyError:
             re['tag'] = None
-        hot = g.user.get_hot_card(re['tag'])
+        user = User()
+        hot = user.get_hot_card(re['tag'])
         hot['status'] = 1
         return jsonify(hot)
 

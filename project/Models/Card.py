@@ -9,26 +9,25 @@ from .PetLogDataError import PetLog_DataError
 class Card(db.Model):
     """card model"""
     __tablename__ = "cards"
-    __id = db.Column(db.String(16), primary_key=True, nullable=False)
-    __user_id = db.Column(db.String(16), nullable=False)
-    __pet_id = db.Column(db.String(16), nullable=False)
-    __card_content = db.Column(db.Text, nullable=True)
-    __card_image_path = db.Column(db.String(128), nullable=True)
-    __card_time = db.Column(db.DateTime, nullable=False)
-    __card_type = db.Column(db.String(1),nullable=False)
-    __tag_id = db.Column(db.String(256),nullable=True)
-    __whether_share = db.Column(db.Integer,nullable = False)
+    id = db.Column(db.String(16), primary_key=True, nullable=False)
+    user_id = db.Column(db.String(16), nullable=False)
+    pet_id = db.Column(db.String(16), nullable=False)
+    pet_status = db.Column(db.String(20),nullable=True)
+    content = db.Column(db.Text, nullable=True)
+    images = db.Column(db.String(128), nullable=True)
+    time = db.Column(db.Float, nullable=False)
+    whether_share = db.Column(db.Integer,nullable = False)
     
     def __init__(self,card_id = None):
         if card_id:
-            info = self.query.filter_by(_Card__id=card_id).all()
-            self.__id = info.__id
-            self.__user_id = info.__user_id
-            self.__pet_id = info.__pet_id
-            self.__card_content = info.__card_content
-            self.__card_image_path = info.__card_image_path
-            self.__card_time = info.__card_time
-            self.__whether_share = info.__whether_share
+            info = self.query.filter_by(id=card_id).all()
+            self.id = info.id
+            self.user_id = info.user_id
+            self.pet_id = info.pet_id
+            self.content = info.content
+            self.images = info.images
+            self.time = info.time
+            self.whether_share = info.whether_share
         else:
             pass
     #------>发布动态
@@ -45,16 +44,16 @@ class Card(db.Model):
             'tags':{"1","2"}
         }
         '''
-        self.__id = str(uuid.uuid1()).split("-")[0]
-        self.__user_id = create_dict['user_id']
-        self.__content = create_dict['content']
-        self.__pet_id = create_dict['pet_id']
-        self.__card_type = create_dict['card_type']
+        self.id = str(uuid.uuid1()).split("-")[0]
+        self.user_id = create_dict['user_id']
+        self.pet_id = create_dict['for']
+        self.time = time.time()
         
         # 以下部分为发布卡片不一样要携带的信息
+        self.set_content(create_dict['content'])
         self.set_images(create_dict['images'])
-        self.set_tags(create_dict['tags'])
-        self.__whether_share = 1
+
+        self.whether_share = 1
         return True
 
     def insert(self):
@@ -65,8 +64,8 @@ class Card(db.Model):
 
     def timeline(pet_id):
         items = []
-        info = Card.query.filter(Card.__pet_id == pet_id).\
-                    order_by(Card.__tag_id.asc()).all()
+        info = Card.query.filter(Card.pet_id == pet_id).\
+                    order_by(Card.tag_id.asc()).all()
         if info is None:
             return []
         
@@ -109,10 +108,12 @@ class Card(db.Model):
 
         return items
 
-    def hot(self,cards_id):
-        cards = []
-        for id in cards_id:
-            cards.append(Card.query.filter(Card.__id == id).first())
+    def hot(cards_id):
+        if cards_id:
+            cards = Card.query.filter(Card.id.in_(cards_id)).all()
+        else:
+            cards = Card.query.all()
+            
         try:
             cards = random.sample(cards, 5)
             return cards
@@ -126,15 +127,16 @@ class Card(db.Model):
     # 给卡片、状态、tags、share（Bool）
     def check_data(self, user_id, data_dict):
         try:
+            data_dict['tags']
+            data_dict['images']
+            data_dict['status']
             # 内容和图片不能同时没有
             if not (data_dict['content'] or
                     data_dict['images']) or \
-                    not data_dict['time']:
+                    data_dict['for']:
                 raise PetLog_DataError("Error : One post card lack something")
             else:
-                data_dict['time'] = int(data_dict['time']) * (10 ** -3)
-
-            data_dict['user_id'] = user_id
+                data_dict['user_id'] = user_id
         except KeyError as error:
             print("KeyError : Don't has " + error)
             raise KeyError
@@ -146,7 +148,7 @@ class Card(db.Model):
 
     #现在先随机从允许查看的卡片中抽取10条卡片，返回这个数组
     def get_hot_card(self):
-        m = self.query.filter_by(_Card__card_type=1).all()
+        m = self.query.filter_by(card_type=1).all()
         show = []
         n = []
         i = []
@@ -161,58 +163,58 @@ class Card(db.Model):
         return show
 
     def get_followings_cards(follows_ids,tag_id,late_card_id):
-        qu = Card.query.filter(Card.__user_id.in_(follows_ids))
+        qu = Card.query.filter(Card.user_id.in_(follows_ids))
         if tag_id :
-            qu = qu.join(Tag_with_Card,Card.__id==Tag_with_Card.__card_id).\
-                        filter(Tag_with_Card.__tag_id == tag_id)
+            qu = qu.join(Tag_with_Card,Card.id==Tag_with_Card.card_id).\
+                        filter(Tag_with_Card.tag_id == tag_id)
         if late_card_id:
-            qu = qu.filter(Card.__card_time < (Card.query.filter(
-                            Card.__id == late_card_id).first().get_time()))
+            qu = qu.filter(Card.card_time < (Card.query.filter(
+                            Card.id == late_card_id).first().get_time()))
 
-        return qu.order_by(Card.__card_time.asc()).limit(5).all()
+        return qu.order_by(Card.card_time.asc()).limit(5).all()
 
     #返回一个人的所有相关卡片的信息
     def get_one_all(self,user_id):
-        _all = self.query.filter_by(_Card__card_id=user_id).all()
+        _all = self.query.filter_by(card_id=user_id).all()
         return _all
 
     #返回一个宠物的所有相关卡片的信息
     def get_pet_all(self,pet_id): 
-        pet_all_card = self.query.filter_by(_Card__pet_id=pet_id).all()
+        pet_all_card = self.query.filter_by(pet_id=pet_id).all()
         return pet_all_card
 
     #返回一个用户的所有可分享的卡片：
     def get_one_all_share(self,user_id):
-        share_all = self.query.filter_by(_Card__user_id=user_id,_Card__card_type=1).all()
+        share_all = self.query.filter_by(user_id=user_id,card_type=1).all()
         return share_all
 
     #返回一个宠物的所有可分享的卡片：
     def get_pet_all_share(self,pet_id):
-        share_pet_all = self.query.filter_by(_Card__pet_id=pet_id,_Card__card_type=1).all()
+        share_pet_all = self.query.filter_by(pet_id=pet_id,card_type=1).all()
         return share_pet_all
     
     #根据用户id判断是否可以获取卡片细节，如果是访客，user_id为guest
     def get_detail(self, card_id):
         information ={
-                "id" : self.__id,
-                "user_id" : self.__user_id,
-                "pet_id" : self.__pet_id,
-                "card_content" : self.__card_content,
-                "card_image_path" : self.__card_image_path,
-                "card_time" : self.__card_time,
-                "card_type" : self.__card_type,
-                "whether_share" : self.__whether_share
+                "id" : self.id,
+                "user_id" : self.user_id,
+                "pet_id" : self.pet_id,
+                "card_content" : self.card_content,
+                "card_image_path" : self.card_image_path,
+                "card_time" : self.card_time,
+                "card_type" : self.card_type,
+                "whether_share" : self.whether_share
         }
         return information
 
     def get_whether_share(self):
-        if self.__whether_share is 1:
+        if self.whether_share is 1:
             return True
         else:
             return False
 
     def get_time(self):
-        return self.__time
+        return self.time
 
     def get_tm_yday(self):
         return time.localtime(self.get_time()).tm_yday
@@ -229,22 +231,19 @@ class Card(db.Model):
                                     self.get_time()))
                                     
     def get_user_id(self):
-        return self.__user_id
+        return self.user_id
 
     def set_images(self,images):
         f_images = str()
-        for t in images:
-            f_images = f_images + ' ' + t
+        if images:
+            for t in images:
+                f_images = f_images + ' ' + t
+                self.images = f_images
+        else:
+            self.images = None
 
-        self.__images = f_images
-
-    def set_tags(self,tags):
-        tag_id = str()
-        for t in tags:
-            tag = Tag.filter_by(_Tags__name=t).all()
-            if tag is None:
-                raise PetLog_DataError("some tag don't in table!")
-            tag_id = tag_id + ' ' + tag.get_id()
-
-        self.__tag_id = tag_id
-        return tag_id
+    def set_content(self,content):
+        if content:
+            self.content =content
+        else:
+            self.content = None

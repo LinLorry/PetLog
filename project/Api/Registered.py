@@ -14,7 +14,7 @@ class registered(Resource):
     def post(self):
         if self.verify_code(request.json):
             user = User("user")
-            user_dict = user.verify_data(request.json,verify_type = 'register')
+            user_dict = User.verify_data(request.json,verify_type = 'register')
             user.create_user(user_dict)
             user.insert()
 

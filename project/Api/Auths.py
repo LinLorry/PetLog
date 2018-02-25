@@ -6,10 +6,9 @@ from project.extra import login_required,checke_interface
 class auth(Resource):
     @checke_interface
     def post(self):
-
         user = User("user")
-        user_data = user.verify_data(request.json,"auth")
-        user.find_user_by_email(user_data['email'])
+        user_data = User.verify_data(request.json,"auth")
+        user.find_by_email(user_data['email'])
         if user.verify_password(user_data['password']):
             return jsonify(status = 1, \
                         token = user.generate_auth_token().decode("utf8"))

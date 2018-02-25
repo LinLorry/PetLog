@@ -17,41 +17,41 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 class User(db.Model):
     __tablename__ = "users"
-    __id = db.Column(db.String(16), primary_key=True, nullable=False)
-    __email = db.Column(db.String(32), unique=True, nullable=False)
-    __user_nickname = db.Column(db.String(20), unique=True, nullable=False)
-    __password_hash = db.Column(db.String(128), nullable=False)
-    __gender = db.Column(db.String(6), nullable=False)
-    __avatar_path = db.Column(db.String(128), nullable=False)
-    __motto = db.Column(db.String(256), nullable=True)
-    __address = db.Column(db.String(30), nullable=False)
-    __birth = db.Column(db.Float,nullable=True)
-    __joined_time = db.Column(db.Float, nullable=False)
-    __grade = db.Column(db.Integer, nullable=False)
+    id = db.Column(db.String(16), primary_key=True, nullable=False)
+    email = db.Column(db.String(32), unique=True, nullable=False)
+    nickname = db.Column(db.String(20), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    gender = db.Column(db.String(6), nullable=False)
+    avatar_path = db.Column(db.String(128), nullable=False)
+    motto = db.Column(db.String(256), nullable=True)
+    address = db.Column(db.String(30), nullable=False)
+    birth = db.Column(db.Float,nullable=True)
+    joined_time = db.Column(db.Float, nullable=False)
+    grade = db.Column(db.Integer, nullable=False)
 
     # 构造函数
     #用来构造一个访客的用户对象
     def __init__(self,content=None,option="default"):
-        if option == 'id' or 'email':
+        if option == 'id' or \
+            option == 'email':
             if option == 'id':
-                info = User.query.filter(User.__id == content).first()
+                info = User.query.filter(User.id == content).first()
             elif option == 'email':
-                info = User.query.filter(User.__email == content).first()
-            self.__id = info.__id()
-            self.__user_nickname = info.__user_nickname
-            self.__password_hash = info.__password_hash
-            self.__address = info.__address
+                info = User.query.filter(User.email == content).first()
+            self.id = info.id()
+            self.user_nickname = info.user_nickname
+            self.password_hash = info.password_hash
+            self.address = info.address
             
-            self.__phonenumber =info.__phonenumber
-            self.__gender = info.__gender
+            self.phonenumber =info.phonenumber
+            self.gender = info.gender
         elif option == 'default':
             pass
         elif option == 'guest':
             pass
 
-    def verify_data(self, data_dict, verify_type):
+    def verify_data(data_dict, verify_type):
         try:
-
             if verify_type == "register":
                 # 用户必须有邮箱，昵称和密码
                 if not data_dict['email'] or \
@@ -65,9 +65,20 @@ class User(db.Model):
             elif verify_type == "auth":
                 # 验证登陆一定有邮箱和密码
                 if not data_dict['email'] or \
-                        not data_dict['password']:
+                    not data_dict['password']:
                     raise PetLog_DataError(
                         "One login lack something")
+            elif verify_type == "update":
+                if not data_dict['name'] or \
+                    not data_dict['gender'] or \
+                    not data_dict['avatar'] or \
+                    not data_dict['location']:
+                    raise PetLog_DataError(
+                        "One update lack something")
+                if User.query.get(data_dict['id']) is None:
+                    raise PetLog_DataError("Don't has this user id!")
+                    data_dict['motto']
+                    data_dict['birth_day']
 
         except KeyError as error:
             print("KeyError : Don't has " + error)
@@ -98,16 +109,16 @@ class User(db.Model):
         }'''
 
         # 生产用户的唯一id
-        self.__id = str(uuid.uuid1()).split("-")[0]
+        self.id = str(uuid.uuid1()).split("-")[0]
 
         # 对于必须拥有的变量调用赋值即可
-        self.__email = create_dict['email']
-        self.__user_nickname = create_dict['user_nickname']
+        self.email = create_dict['email']
+        self.nickname = create_dict['user_nickname']
         self.password = create_dict['password']
-        self.__joined_time = time.time()
+        self.joined_time = time.time()
         
-        self.__grade = 1  # 直接赋值，初始用户等级均为1
-        self.__avatar_path = create_dict['avatar_path']
+        self.grade = 1  # 直接赋值，初始用户等级均为1
+        self.avatar_path = create_dict['avatar_path']
 
         # 对于不一定拥有的变量调用set设置器（由后端自动生成字段）
         # 有些设置器还未写,需要补充(若为空赋值为后面的结果)
@@ -131,12 +142,13 @@ class User(db.Model):
                 'new_address': '江西上饶'}'''
 
     def update_user(update_dict):
+        update_dict = User.verify_data(update_dict,"update")
         it = User.query.get(update_dict['id'])
-        it.__user_nickname = update_dict['name']
-        it.__gender = update_dict['gender']
-        it.__avatar_path = update_dict['avatar']
-        it.__motto = update_dict['motto']
-        it.__address = update_dict['location']
+        it.user_nickname = update_dict['name']
+        it.gender = update_dict['gender']
+        it.avatar_path = update_dict['avatar']
+        it.motto = update_dict['motto']
+        it.address = update_dict['location']
         it.set_birth(update_dict['birth_day'])
         db.session.add(it)
         db.session.commit()
@@ -176,11 +188,15 @@ class User(db.Model):
     def create_card(self, card_dict):
         card = Card()
         card_dict = card.check_data(self.get_id(), card_dict)
-        if card.create_card(card_dict) \
-            and card.insert():
-            return True
-        else:
-            return False
+        if card.create_card(card_dict):
+            t_w_c = Tag_with_Card()
+            tags_id = []
+            for tag_name in card_dict['tags']:
+                tags_id.append(Tag.get_id(tag_name))
+            if t_w_c.create_tag_with_card(card.get_id(),tags_id) \
+                and card.insert():
+                return True
+        return False
     
     # -------->获取时间轴
     def get_timeline(self, pet_id):
@@ -215,27 +231,24 @@ class User(db.Model):
             tag_id = Tag.get_id([tag_name])
             if tag_id is None:
                 raise PetLog_DataError("Don't has this tag:" + tag_name)
+        else:
+            tag_id = None
 
-        card_list =Card.get_followings_cards(
+        cards =Card.get_followings_cards(
                                     followings_id,
                                     tag_id,
                                     late_card_id)
-        if len(card_list) < 5:
+        if len(cards) < 5:
             infinited = True
         else:
             infinited = False
         
         friend = {
             "infinited": infinited,
-            "cards": self.trans_card(card_list)
+            "cards": self.trans_card(cards)
         }
 
     def get_hot_card(self, tag_name):
-        card = Card()
-        follow = Follow()
-        praise = Praise()
-        comment = Comment()
-
         if tag_name:
             tag_id = Tag.get_id([tag_name])
             if tag_id is None:
@@ -243,11 +256,14 @@ class User(db.Model):
             else:
                 cards_id = Tag_with_Card.get_cid_with_tid(tag_id)
             if cards_id is None:
-                raise PetLog_DataError("Don't has card with this tag :" + tag_name)
+                return {
+                    "infinited":True,
+                    "cards":[]
+                }
         else:
             cards_id = None
 
-        cards = card.hot(cards_id)
+        cards = Card.hot(cards_id)
 
         if len(cards) < 5:
             infinited = True
@@ -263,7 +279,7 @@ class User(db.Model):
     def trans_card(self,cards):
         all_card = []
         for card in cards:
-            user = User(content=card.get_user_id(),option= "id")
+            user = User.query.get(card.get_user_id())
             id = card.get_id()
             author = {
                 "name":user.get_nickname(),
@@ -312,12 +328,29 @@ class User(db.Model):
             "avatar":author.get_avatar(),
             "follow":Follow.check_follow(self.get_id(),author.get_id())
         }
+
+        comments = []
+        for comment in Comment.get_comments(card_id):
+            author = User.query.get(comment.get_user_id())
+            author_detail = {
+                "name":author.get_nickname(),
+                "id":author.get_id(),
+                "avatar":author.get_avatar()
+            }
+            one_comment = {
+                "id":comment.get_id(),
+                "author":author_detail,
+                "time":comment.get_date(),
+                "content":comment.get_content()
+            }
+            comments.append(one_comment)
+        
         detail = {
             "id":self.get_id(),
             "author":author_detail,
             "liked":Praise.check_praise(self.get_id(),card_id),
             "post":post,
-            "comments":Comment.get_comments(card_id)
+            "comments":comments
         }
         return detail
         
@@ -326,8 +359,8 @@ class User(db.Model):
 
     def create_comment(self, comment_dict):
         comment = Comment()
-        comment_dict['user_id'] = self.__id
-        comment_dict = comment.check_comment(self.__id, comment_dict)
+        comment_dict['user_id'] = self.id
+        comment_dict = comment.check_comment(self.id, comment_dict)
         if comment.comment_on_card(comment_dict) \
             and comment.insert():
             return comment.get_tm_date()
@@ -340,9 +373,9 @@ class User(db.Model):
     def user_praise(self, be_praise_card_id, praise_operation):
         praise = Praise()
         if praise_operation == '1':
-            return praise.create_praise(self.__id, be_praise_card_id)
+            return praise.create_praise(self.id, be_praise_card_id)
         elif praise_operation == '0':
-            return praise.del_praise(self.__id, be_praise_card_id)
+            return praise.del_praise(self.id, be_praise_card_id)
         else:
             return False
     
@@ -352,9 +385,9 @@ class User(db.Model):
     def user_follow(self, be_concerned_id, follow_operation):
         follow = Follow()
         if follow_operation == '1':
-            return follow.create_follow(self.__id, be_concerned_id)
+            return follow.create_follow(self.id, be_concerned_id)
         elif follow_operation == '0':
-            return follow.del_follow(self.__id, be_concerned_id)
+            return follow.del_follow(self.id, be_concerned_id)
         else:
             return False
 
@@ -433,16 +466,16 @@ class User(db.Model):
     # 密码hash用"密码+用户名+salt"的方法来算
     @password.setter
     def password(self, password):
-        self.__password_hash = pwd_context.encrypt(password +
+        self.password_hash = pwd_context.encrypt(password +
                                                    current_app.config['SALT'] +
-                                                   self.__id)
+                                                   self.id)
 
     # 校验密码方法
     def verify_password(self, password):
         return pwd_context.verify(password +
                                   current_app.config['SALT'] +
-                                  self.__id,
-                                  self.__password_hash)
+                                  self.id,
+                                  self.password_hash)
 
 
 
@@ -455,8 +488,8 @@ class User(db.Model):
     def generate_auth_token(self, expiration=600):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
-        return s.dumps({'id': self.__id,
-                        'email': self.__email})
+        return s.dumps({'id': self.id,
+                        'email': self.email})
 
     # 计算用户当前等级的方法
     def grade_now(self, grade, user_id, comment_number, praise_number):
@@ -467,17 +500,17 @@ class User(db.Model):
     # ------------------------>查找用户的方法(通过昵称搜索用户)
 
     def find_all_user_number(self, nickname):  # 传入要找的用户的昵称
-        peoples = self.query.filter_by(_User__user_nickname=nickname).all()
+        peoples = self.query.filter_by(user_nickname=nickname).all()
         number = len(peoples)
         return number  # 返回的为同一昵称的用户的总数
 
     def find_all_user(self, nickname):  # 传入要找的用户的昵称
-        peoples = self.query.filter_by(_User__user_nickname=nickname).all()
+        peoples = self.query.filter_by(user_nickname=nickname).all()
         users = []
         for people in peoples:
-            users.append({'nickname': people.__user_nickname,
-                          'avatar': people.__avatar_path,
-                          'joined_time': people.__joined_time})
+            users.append({'nickname': people.user_nickname,
+                          'avatar': people.avatar_path,
+                          'joined_time': people.joined_time})
         return users  # 由于名称可重复，返回的为同一昵称的用户的id列表
 
     # --------->(查询自身信息,查询某人的详细信息）
@@ -486,58 +519,58 @@ class User(db.Model):
     # 这类的方法名可以是find_user_XXX(XXX是查找条件),这类查找是精确查找的，有可能有多个条件
 
     def find_by_id(self, user_id):  # 传入某一用户的id 返回的是某人的详细信息
-        info = self.query.filter_by(_User__id=user_id).first()
+        info = self.query.filter_by(id=user_id).first()
         if info is None:
             raise PetLog_DataError("Don't have this id : " + user_id)
 
-        self.__id = info.__id
-        self.__user_nickname = info.__user_nickname
-        self.__password_hash = info.__password_hash
-        self.__gender = info.__gender
-        self.__avatar_path = info.__avatar_path
-        self.__motto = info.__motto
-        self.__address = info.__address
-        self.__joined_time = info.__joined_time
-        self.__grade = info.__grade
-        self.__email = info.__email
+        self.id = info.id
+        self.user_nickname = info.user_nickname
+        self.password_hash = info.password_hash
+        self.gender = info.gender
+        self.avatar_path = info.avatar_path
+        self.motto = info.motto
+        self.address = info.address
+        self.joined_time = info.joined_time
+        self.grade = info.grade
+        self.email = info.email
         return True
 
     def find_by_email(self, user_email):
-        info = self.query.filter_by(_User__email=user_email).first()
+        info = self.query.filter_by(email=user_email).first()
         if info is None:
             raise PetLog_DataError("Don't have this email : " + user_email)
 
-        self.__id = info.__id
-        self.__user_nickname = info.__user_nickname
-        self.__password_hash = info.__password_hash
-        self.__gender = info.__gender
-        self.__avatar_path = info.__avatar_path
-        self.__motto = info.__motto
-        self.__address = info.__address
-        self.__joined_time = info.__joined_time
-        self.__grade = info.__grade
-        self.__email = info.__email
+        self.id = info.id
+        self.user_nickname = info.user_nickname
+        self.password_hash = info.password_hash
+        self.gender = info.gender
+        self.avatar_path = info.avatar_path
+        self.motto = info.motto
+        self.address = info.address
+        self.joined_time = info.joined_time
+        self.grade = info.grade
+        self.email = info.email
         return True
 
     # ---------------------------->get
 
     def get_nickname(self):
-        return self.__user_nickname
+        return self.nickname
 
     def get_id(self):
-        return self.__user_id
+        return self.id
 
     def get_motto(self):
-        if self.__motto:
-            return self.__motto
+        if self.motto:
+            return self.motto
         else:
             return "空"
     
     def get_avatar(self):
-        return self.__avatar_path
+        return self.avatar_path
 
     def get_gender(self):
-        return self.__gender
+        return self.gender
 
     # ---------------------------->get结束
 
@@ -545,21 +578,21 @@ class User(db.Model):
 
     def set_address(self, user_address):
         if not user_address == '':
-            self.__address = user_address
+            self.address = user_address
         return True
 
     def set_user_gender(self, user_gender):
         if not user_gender == '':
-            self.__gender = user_gender
+            self.gender = user_gender
         return True
 
     def set_motto(self, user_motto):
         if not user_motto == '':
-            self.__motto = user_motto
+            self.motto = user_motto
         return True
 
     def set_birth(self,birth_day):
-        self.__birth = time.mktime(
+        self.birth = time.mktime(
                 time.strptime(birth_day,"%Y-%m-%d"))
         return True
     # ---------------------------->设置器(set)结束
