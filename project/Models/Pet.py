@@ -115,18 +115,25 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             return True
 
     
-    def get_detail(pet_id):
-        info = Pet.get(pet_id)
-        detail ={
-            "name": info.get_name(),
-            "motto": info.get_motto(),
-            "avatar": info.get_avatar(),
-            "gender": info.get_gender(),
-            "birth_day": info.get_birth(),
-            "meet_day": info.get_meet(),
-            "variety": info.get_category()
-        }
-        return detail
+    def get_detail(pet_id,user_id):
+        info = Pet.query.get(pet_id)
+        if info.get_user_id == user_id:
+            return {
+                "status": 1,
+                "message": "已经找到您的宠物"
+                "name": info.get_name(),
+                "motto": info.get_motto(),
+                "avatar": info.get_avatar(),
+                "gender": info.get_gender(),
+                "birth_day": info.get_birth(),
+                "meet_day": info.get_meet(),
+                "variety": info.get_category()
+            }
+        else:
+            return {
+                "status": 0,
+                "message": "不好意思，这不是您的宠物"
+            }
 
 
     def get_whether_share(self):
@@ -152,6 +159,18 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             return self.motto
         else:
             return None
+
+    def get_birth_day(self):
+        return self.birth_day
+
+    def get_meet_day(self):
+        return self.meet_day
+
+    def get_birth(self):
+        return time.strftime("%m-%d",time.localtime(self.get_birth_day()))
+
+    def get_meet(self):
+        return time.strftime("%m-%d",time.localtime(self.get_meet_day()))
 
     def get_gender(self):
         return self.gender

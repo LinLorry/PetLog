@@ -64,7 +64,7 @@ class pet_avatar(Resource):
                         message = "failed")
 
 class get_pet_detail(Resource):
-    @checke_interface
+    @login_required
     def get(self):
         re = request.query_string.decode('utf-8')
         id = parse.parse_qs(re)['id']

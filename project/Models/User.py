@@ -178,8 +178,7 @@ class User(db.Model):
         return pet_list
 
     def get_pet_detail(self,pet_id):
-        pet_detail = Pet.get_detail(pet_id)
-        return pet_detail
+        return Pet.get_pet_detail(pet_id,self.get_id())
 
     # -------------------->用户的卡片部分的操作
 
@@ -226,19 +225,18 @@ class User(db.Model):
     # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
     # 朋友圈往下刷时，查找之前的朋友圈内容
     # 提供最下一条朋友圈的id，先查找出所有的关注人发的卡片，按时间排序，找到之前的动态
-    def get_circle_of_friends(self, tag_name, late_card_id):
+    def get_circle_of_friends(self, tags_name, late_card_id):
         followings_id = Follow.get_followings_id(self.get_id())
-
-        if tag_name:
-            tag_id = Tag.get_id([tag_name])
-            if tag_id is None:
-                raise PetLog_DataError("Don't has this tag:" + tag_name)
+        if tags_name:
+            tags_id =[]
+            for tag_name in tags_name:
+                tags_id.append(Tag.get_id(tag_name))
         else:
-            tag_id = None
+            tags_id = None
 
         cards =Card.get_followings_cards(
                                     followings_id,
-                                    tag_id,
+                                    tags_id,
                                     late_card_id)
         if len(cards) < 5:
             infinited = True
@@ -252,14 +250,14 @@ class User(db.Model):
 
         return friend
 
-    def get_hot_card(self, tag_name):
-        if tag_name:
-            tag_id = Tag.get_id([tag_name])
-            if tag_id is None:
-                raise PetLog_DataError("Don't has this tag:" + tag_name)
-            else:
-                cards_id = Tag_with_Card.get_cid_with_tid(tag_id)
-            if cards_id is None:
+    def get_hot_card(self, tags_name):
+        if tags_name:
+            cards_id = []
+            for tag_name in tags_name:
+                tag_id = Tag.get_id(tag_name)
+                cards_id + Tag_with_Card.get_cid_with_tid(tag_id)
+
+            if cards_id is []:
                 return {
                     "infinited":True,
                     "cards":[]
@@ -287,9 +285,8 @@ class User(db.Model):
             card['comments'] = Comment.\
                     get_comments_with_card_number(
                         card['id'])
-            card['post']['tags'] = Tag.get_name(
-                                Tag_with_Card.get_tid_with_cid(
-                                card['id']))
+            for tag_id in Tag_with_Card.get_tid_with_cid(card['id']):
+                card['post']['tags'].append(Tag.get_name(tag_id))
             cards['post']['likes'] = Praise.find_praise_number(card['id'])
         
         return cards
@@ -297,7 +294,7 @@ class User(db.Model):
     def trans_card(self,cards):
         all_card = []
         for card in cards:
-            user = User.query.get(card.get_id())
+            user = User.query.get(card.get_user_id())
             id = card.get_id()
             author = {
                 "name":user.get_nickname(),
@@ -310,12 +307,12 @@ class User(db.Model):
                 "time":card.get_card_date(),
                 "content":card.get_content(),
                 "status":card.get_status(),
-                "tags":Tag.get_name(
-                        [Tag_with_Card.get_tid_with_cid(
-                            card.get_id())]),
+                "tags":[],
                 "likes":Praise.find_praise_number(card.get_id()),
                 "images":card.get_images()
             }
+            for tag_id in Tag_with_Card.get_tid_with_cid(card.get_id()):
+                post['tags'].append(Tag.get_name(tag_id))
             comments = Comment.get_comments_with_card_number(card.get_id())
             one_card = {
                 "id": id,

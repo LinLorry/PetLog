@@ -20,7 +20,7 @@ class Card(db.Model):
     
     def __init__(self,card_id = None):
         if card_id:
-            info = self.query.filter_by(id=card_id).all()
+            info = self.query.filter_by(id=card_id).first()
             self.id = info.id
             self.user_id = info.user_id
             self.pet_id = info.pet_id
@@ -88,7 +88,7 @@ class Card(db.Model):
             one_card = {
                 "content" : i.get_content(),
                 "images" : i.get_images(),
-                "status" : i.get_status(),
+                "status" : i.get_pet_status(),
                 "id" : i.get_id()
             }
 
@@ -96,9 +96,12 @@ class Card(db.Model):
                 (i.get_tm_year() != year):
                 one_day['items'] = one_day_items
                 items.append(one_day)
+
                 one_day['items'] = [one_card]
-                one_day["date"] = i.get_card_date(),
+                one_day["date"] = i.get_card_date()
+
                 day = i.get_tm_yday()
+                
                 if i.get_tm_year() != year:
                     items.append(one_year)
                     year = i.get_tm_year()
@@ -255,8 +258,14 @@ class Card(db.Model):
     def get_user_id(self):
         return self.user_id
     
-    def get_status(self):
+    def get_pet_status(self):
         return self.pet_status
+
+    def get_content(self):
+        return self.content
+
+    def get_images(self):
+        return self.images.split(" ")
 
     def set_images(self,images):
         f_images = str()

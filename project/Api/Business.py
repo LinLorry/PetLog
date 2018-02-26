@@ -110,7 +110,7 @@ class upload_avatar(Resource):
             m = md5()
             m.update((str1 + str2).encode ('utf-8'))
 
-            filename = m.hexdigest()[-8:8] + str3
+            filename = str(m.hexdigest()[8:-8]) + str3
 
             filename = str1 + str2
 

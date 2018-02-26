@@ -44,6 +44,8 @@ class Follow(db.Model):
 
     def get_followings_number(user_id):  # 查找该用户关注的用户的数量为
         _all = Follow.query.filter(Follow.user_id == user_id).all()
+        if _all is None:
+            return 0
         fing_number = len(_all)
         return fing_number
 
