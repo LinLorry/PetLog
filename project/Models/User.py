@@ -250,6 +250,8 @@ class User(db.Model):
             "cards": self.trans_card(cards)
         }
 
+        return friend
+
     def get_hot_card(self, tag_name):
         if tag_name:
             tag_id = Tag.get_id([tag_name])

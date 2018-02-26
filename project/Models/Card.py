@@ -168,7 +168,6 @@ class Card(db.Model):
             qu = qu.join(Tag_with_Card,Card.id==Tag_with_Card.id).\
                         filter(Tag_with_Card.tag_id == tag_id)
         if late_card_id:
-            
             qu = qu.filter(Card.time < (Card.query.filter(
                             Card.id == late_card_id).first().get_time()))
 

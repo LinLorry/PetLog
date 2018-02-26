@@ -74,7 +74,7 @@ class u_get_circle_of_friends(Resource):
             re['tag']
         except KeyError:
             re['tag'] = None
-        if re['lastCursor'] is "none":
+        if re['lastCursor'][0].cmp("none"):
             re['lastCursor']=None
             
         c_o_f = g.user.get_circle_of_friends(re['tag'],re['lastCursor'])
@@ -128,9 +128,7 @@ class get_other_all_cards(Resource):
         re = request.query_string.decode('utf-8')
         re = parse.parse_qs(re)
 
-        try:
-            re['lastCursor']
-        except KeyError:
+        if re['lastCursor'] is ["none"]:
             re['lastCursor'] = None
 
         cards = g.user.get_user_all_card(re['id'],re['lastCursor'])

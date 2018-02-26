@@ -36,7 +36,9 @@ class Follow(db.Model):
             return True
 
     def get_followers_number(user_id):  # 查找有多少人关注该用户
-        _all = Follow.query.filtee(Follow.be_concerned_id == user_id)
+        _all = Follow.query.filter(Follow.be_concerned_id == user_id).all()
+        if _all is None:
+            return 0
         fer_number = len(_all)
         return fer_number
 

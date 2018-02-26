@@ -28,7 +28,7 @@ api.add_resource (praise_interface,"/user/post_praise")
 api.add_resource (upload_card_image,"/upload/card_image")
 
 api.add_resource (u_get_timeline,"/user/get_timeline/")
-api.add_resource (u_get_circle_of_friends,"/user/get_circle_of_friends/")
+api.add_resource (u_get_circle_of_friends,"/user/get_circle_of_friends")
 api.add_resource (u_get_card_detail,"/card/")
 api.add_resource (get_hot_card,"/get_hot")
 
