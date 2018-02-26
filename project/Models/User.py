@@ -57,7 +57,7 @@ class User(db.Model):
                     not data_dict['user_nickname'] or \
                     not data_dict['password'] or \
                     not data_dict['gender'] or \
-                    not data_dict['avatar_path'] or \
+                    not data_dict['avatar'] or \
                     not data_dict['gender'] :
                     raise PetLog_DataError(
                         "One register lack something")
@@ -117,7 +117,7 @@ class User(db.Model):
         self.joined_time = time.time()
         
         self.grade = 1  # 直接赋值，初始用户等级均为1
-        self.avatar_path = create_dict['avatar_path']
+        self.avatar_path = create_dict['avatar']
 
         # 对于不一定拥有的变量调用set设置器（由后端自动生成字段）
         # 有些设置器还未写,需要补充(若为空赋值为后面的结果)

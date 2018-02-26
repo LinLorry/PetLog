@@ -72,7 +72,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         
         return True
 
-    def user_all_pet(self, user_id):
+    def user_all_pets(self, user_id):
         # 时间轴界面下获取某用户所有宠物的id
         pets = self.query.filter_by(user_id=user_id).all()
         all_pets = []

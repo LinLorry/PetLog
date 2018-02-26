@@ -165,13 +165,13 @@ class Card(db.Model):
     def get_followings_cards(follows_ids,tag_id,late_card_id):
         qu = Card.query.filter(Card.user_id.in_(follows_ids))
         if tag_id :
-            qu = qu.join(Tag_with_Card,Card.id==Tag_with_Card.card_id).\
+            qu = qu.join(Tag_with_Card,Card.id==Tag_with_Card.id).\
                         filter(Tag_with_Card.tag_id == tag_id)
         if late_card_id:
-            qu = qu.filter(Card.card_time < (Card.query.filter(
+            qu = qu.filter(Card.time < (Card.query.filter(
                             Card.id == late_card_id).first().get_time()))
 
-        return qu.order_by(Card.card_time.asc()).limit(5).all()
+        return qu.order_by(Card.time.asc()).limit(5).all()
 
     #返回一个人的所有相关卡片的信息
     def get_user_all_card(user_id,last_id):
@@ -218,10 +218,10 @@ class Card(db.Model):
                 "id" : self.id,
                 "user_id" : self.user_id,
                 "pet_id" : self.pet_id,
-                "card_content" : self.card_content,
-                "card_image_path" : self.card_image_path,
-                "card_time" : self.card_time,
-                "card_type" : self.card_type,
+                "card_content" : self.content,
+                "card_image_path" : self.image_path,
+                "card_time" : self.time,
+                "card_type" : self.type,
                 "whether_share" : self.whether_share
         }
         return information

@@ -18,7 +18,7 @@ class create_pet(Resource):
         
 class update_pet(Resource):
     @login_required
-    def post(self):
+    def get(self):
         mesage = g.pet.check_updata_data(request.json)
         if mesage:
             a = g.pet.update(request.json)
@@ -29,7 +29,7 @@ class update_pet(Resource):
 class get_user_all_pet(Resource):
     @login_required
     def get(self):
-        pet_list = g.user.get_all_pet()
+        pet_list = g.user.get_all_pets()
         if pet_list:
             return jsonify(pet_list)
         else:

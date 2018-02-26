@@ -30,7 +30,7 @@ class registered(Resource):
         #str2 是注册使用的密钥
         #str3 是用户的密码
         str1 = code_dict['email']
-        str2 = current_app.config['REGISER_KEY']
+        str2 = current_app.config['REGISER_CODE']
         str3 = code_dict['password']
 
         src = str1 + str2 + str3
@@ -38,7 +38,7 @@ class registered(Resource):
         m = md5()
         m.update(src.encode('utf-8'))
 
-        if code_dict['code'] != m.hexdigest():
+        if code_dict['register_key'] != m.hexdigest():
             raise PetLog_DataError(
                 'Error : One other person post register interface')
         else:
@@ -77,7 +77,7 @@ class user_avatar(Resource):
             m = md5()
             m.update((str1 + str2).encode ('utf-8'))
 
-            filename = m.hexdigest()[-8:8] + str3
+            filename = str(m.hexdigest())[-8:8] + str3
 
             file.save (os.path.join(
                 current_app.config['USER_AVATAR_FOLDER'],
