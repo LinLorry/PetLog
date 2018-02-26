@@ -180,5 +180,3 @@ class get_pet_card(Resource):
     def post(self):
         return jsonify(g.user.get_pet_card(request.json['pet_id'])) '''
 
-
-

@@ -164,5 +164,6 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     
     def set_meet_day(self,meet_day):
         self.meet_day = time.mktime(time.strptime(meet_day,"%Y-%m-%d"))
+        
 
 

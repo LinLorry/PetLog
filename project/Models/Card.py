@@ -255,7 +255,7 @@ class Card(db.Model):
     def get_user_id(self):
         return self.user_id
     
-    def get_pet_status(self):
+    def get_status(self):
         return self.pet_status
 
     def set_images(self,images):
@@ -272,3 +272,4 @@ class Card(db.Model):
             self.content =content
         else:
             self.content = None
+

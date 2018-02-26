@@ -307,7 +307,7 @@ class User(db.Model):
             }
             liked = Praise.check_praise(self.get_id(),card.get_id())
             post = {
-                "time":card.get_detail_date(),
+                "time":card.get_card_date(),
                 "content":card.get_content(),
                 "status":card.get_status(),
                 "tags":Tag.get_name(
