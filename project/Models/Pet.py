@@ -107,6 +107,12 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             raise error
         else:
             return data_dict
+        
+    def check_update_data(self,data_dict):
+        if data_dict['name'] is  None:
+            return "名字不得为空"
+        else:
+            return True
 
     def find_by_id(self, pet_id):  # 传入某一用户的id 返回的是某人的详细信息
         info = self.query.filter_by(id=pet_id).first()
