@@ -4,7 +4,7 @@ from project import db
 #----->关注功能
 
 class Follow(db.Model):
-    __tablename__ = "follow"
+    __tablename__ = "Follow"
     id = db.Column(db.String(16), primary_key=True, nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
     be_concerned_id = db.Column(db.String(16), nullable=False)
@@ -13,16 +13,16 @@ class Follow(db.Model):
     # 不需要insert方法和update方法了，集成在这两个方法中
 
     def create_follow(self, user_id, be_concerned_id):
-        try:
+        if not Follow.query.filter(Follow.be_concerned_id == be_concerned_id,
+                                    Follow.user_id == user_id):
             id = str(uuid.uuid1()).split("-")[0]
             self.user_id = user_id
             self.be_concerned_id = be_concerned_id
             db.session.add(self)
             db.session.commit()
-        except:
-            return False
-        else:
             return True
+        else:
+            return False
 
     def del_follow(self, user_id, be_concerned_id):
         try:

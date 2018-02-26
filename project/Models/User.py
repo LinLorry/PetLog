@@ -1,6 +1,9 @@
 import uuid
 import time
-
+from threading import Thread
+from flask import current_app
+from passlib.apps import custom_app_context as pwd_context
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from project import db
 from .Pet import Pet
 from .Tag import Tag
@@ -10,13 +13,9 @@ from .Follow import Follow
 from .Comment import Comment
 from .Tag_with_card import Tag_with_Card
 from .PetLogDataError import PetLog_DataError
-from threading import Thread
-from flask import current_app
-from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 class User(db.Model):
-    __tablename__ = "users"
+    __tablename__ = "Users"
     id = db.Column(db.String(16), primary_key=True, nullable=False)
     email = db.Column(db.String(32), unique=True, nullable=False)
     nickname = db.Column(db.String(20), unique=True, nullable=False)
@@ -39,7 +38,7 @@ class User(db.Model):
             elif option == 'email':
                 info = User.query.filter(User.email == content).first()
             self.id = info.id()
-            self.user_nickname = info.user_nickname
+            self.nickname = info.nickname
             self.password_hash = info.password_hash
             self.address = info.address
             
@@ -124,7 +123,8 @@ class User(db.Model):
         # 有些设置器还未写,需要补充(若为空赋值为后面的结果)
 
         self.set_address(create_dict['address'])
-        self.set_user_gender(create_dict['gender'])
+        self.set_gender(create_dict['gender'])
+        
         return True
 
     # ---------------------->插入用户信息的方法
@@ -144,7 +144,7 @@ class User(db.Model):
     def update_user(update_dict):
         update_dict = User.verify_data(update_dict,"update")
         it = User.query.get(update_dict['id'])
-        it.user_nickname = update_dict['name']
+        it.nickname = update_dict['name']
         it.gender = update_dict['gender']
         it.avatar_path = update_dict['avatar']
         it.motto = update_dict['motto']
@@ -204,6 +204,7 @@ class User(db.Model):
         pet = Pet.query.get(pet_id)
         if pet is None:
             raise("Don't have this pet id!")
+
         timeline ={
             "name":pet.get_name(),
             "age" : pet.get_age(),
@@ -211,7 +212,7 @@ class User(db.Model):
             "mooto" : pet.get_motto(),
             "items": []
         }
-        if pet.get_user_id == self.get_id():
+        if pet.get_id == self.get_id():
             timeline['status'] = 1
         elif pet.get_whether_share():
             timeline['status'] = 0
@@ -219,6 +220,7 @@ class User(db.Model):
             return False
 
         timeline['items'] = Card.timeline(pet_id)
+        
         return timeline
 
     # 朋友圈方法，last_card_id是上次加载的最后一张卡片id
@@ -276,10 +278,24 @@ class User(db.Model):
         }
         return hot
 
+    def get_user_all_card(self,user_id,last_id):
+        cards = Card.get_user_all_card(id,last_id)
+        for card in cards:
+            card['liked'] = Praise.check_praise(self.get_id(),card['id'])
+            card['comments'] = Comment.\
+                    get_comments_with_card_number(
+                        card['id'])
+            card['post']['tags'] = Tag.get_name(
+                                Tag_with_Card.get_tid_with_cid(
+                                card['id']))
+            cards['post']['likes'] = Praise.find_praise_number(card['id'])
+        
+        return cards
+
     def trans_card(self,cards):
         all_card = []
         for card in cards:
-            user = User.query.get(card.get_user_id())
+            user = User.query.get(card.get_id())
             id = card.get_id()
             author = {
                 "name":user.get_nickname(),
@@ -317,7 +333,7 @@ class User(db.Model):
         elif card.get_whether_share():
             pet = Pet(pet_id = card.get_pet_id())
             if pet.get_whether_share:
-                author = User(card.get_user_id())
+                author = User(card.get_id())
                 post = card.get_detail(card_id)
         else:
             return False
@@ -331,7 +347,7 @@ class User(db.Model):
 
         comments = []
         for comment in Comment.get_comments(card_id):
-            author = User.query.get(comment.get_user_id())
+            author = User.query.get(comment.get_id())
             author_detail = {
                 "name":author.get_nickname(),
                 "id":author.get_id(),
@@ -458,6 +474,23 @@ class User(db.Model):
     def get_other_profile(self,user_id):
         other = User(content=user_id,option="id")
 
+        followed = Follow.check_follow(self.get_id(),
+                                        other.get_id())
+        user = {
+            "name": other.get_nickname(),
+            "avatar": other.get_avatar(),
+            "motto": other.get_motto(),
+            "followers": Follow.get_followers_number(other.get_id()),
+            "following": Follow.get_followings_number(other.get_id())
+        }
+        pets = Pet.user_all_pets(self.get_id())
+
+        return {
+            "followed": followed,
+            "user": user,
+            "pets": pets
+        }
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -508,7 +541,7 @@ class User(db.Model):
         peoples = self.query.filter_by(user_nickname=nickname).all()
         users = []
         for people in peoples:
-            users.append({'nickname': people.user_nickname,
+            users.append({'nickname': people.nickname,
                           'avatar': people.avatar_path,
                           'joined_time': people.joined_time})
         return users  # 由于名称可重复，返回的为同一昵称的用户的id列表
@@ -524,7 +557,7 @@ class User(db.Model):
             raise PetLog_DataError("Don't have this id : " + user_id)
 
         self.id = info.id
-        self.user_nickname = info.user_nickname
+        self.nickname = info.nickname
         self.password_hash = info.password_hash
         self.gender = info.gender
         self.avatar_path = info.avatar_path
@@ -541,7 +574,7 @@ class User(db.Model):
             raise PetLog_DataError("Don't have this email : " + user_email)
 
         self.id = info.id
-        self.user_nickname = info.user_nickname
+        self.nickname = info.nickname
         self.password_hash = info.password_hash
         self.gender = info.gender
         self.avatar_path = info.avatar_path
@@ -572,23 +605,30 @@ class User(db.Model):
     def get_gender(self):
         return self.gender
 
+    def get_birth_day(self):
+        return time.strftime("%Y-%m-%d",
+                    time.localtime(self.birth))
+
+    def get_location(self):
+        return self.address
+
     # ---------------------------->get结束
 
     # ---------------------------->设置器(set)
 
-    def set_address(self, user_address):
-        if not user_address == '':
-            self.address = user_address
+    def set_address(self, address):
+        if not address == '':
+            self.address = address
         return True
 
-    def set_user_gender(self, user_gender):
-        if not user_gender == '':
-            self.gender = user_gender
+    def set_gender(self, gender):
+        if not gender == '':
+            self.gender = gender
         return True
 
-    def set_motto(self, user_motto):
-        if not user_motto == '':
-            self.motto = user_motto
+    def set_motto(self, motto):
+        if not motto == '':
+            self.motto = motto
         return True
 
     def set_birth(self,birth_day):

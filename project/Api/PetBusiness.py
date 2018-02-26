@@ -35,11 +35,14 @@ class get_user_all_pet(Resource):
         else:
             return jsonify(status = 0, message = "failed")
 
-class new_pet_avatar(Resource):
+class pet_avatar(Resource):
     @login_required
     def post(self):
         file = request.files['image']
         if file and allowed_image(file.filename):
+            #str1是随机的uuid
+            #str2是图片名
+            #str3是图片的后缀
             str1 = str(uuid.uuid1()).split("-")[0]
             str2 = secure_filename(file.filename).rsplit('.')[0]
             str3 = '.' + file.filename.rsplit('.')[1]

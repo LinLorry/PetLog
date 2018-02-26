@@ -2,7 +2,7 @@ import uuid
 from project import db
 
 class Praise(db.Model):
-    __tablename__ = "praise"
+    __tablename__ = "Praise"
     id = db.Column(db.String(16), primary_key=True, nullable=False)
     card_id = db.Column(db.String(16), nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
@@ -10,16 +10,16 @@ class Praise(db.Model):
     # 不需要insert方法和update方法了，集成在这两个方法中
 
     def create_praise(self, user_id, card_id):
-        try:
+        if not Praise.query.filter(Praise.card_id == card_id,
+                                Praise.user_id == user_id):
             id = str(uuid.uuid1()).split("-")[0]
             self.card_id = card_id
             self.user_id = user_id
             db.session.add(self)
             db.session.commit()
-        except:
-            return False
-        else:
             return True
+        else:
+            return False
 
     def del_praise(self, user_id, card_id):
         try:

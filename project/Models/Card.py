@@ -8,7 +8,7 @@ from .PetLogDataError import PetLog_DataError
 
 class Card(db.Model):
     """card model"""
-    __tablename__ = "cards"
+    __tablename__ = "Cards"
     id = db.Column(db.String(16), primary_key=True, nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
     pet_id = db.Column(db.String(16), nullable=False)
@@ -174,9 +174,28 @@ class Card(db.Model):
         return qu.order_by(Card.card_time.asc()).limit(5).all()
 
     #返回一个人的所有相关卡片的信息
-    def get_one_all(self,user_id):
-        _all = self.query.filter_by(card_id=user_id).all()
-        return _all
+    def get_user_all_card(user_id,last_id):
+        cards = Card.query.filter(Card.user_id == user_id).\
+                        order_by(Card.time.asc())
+        if last_id:
+            last_time = Card.query.get(last_id).first().get_time()
+            cards = cards.filter(Card.time <last_time)
+        
+        cards = cards.limit(5).all()
+        all_cards =[]
+
+        if cards is None:
+            return all_cards
+        else:
+            for one_card in cards:
+                post = {
+                    "time": one_card.get_card_date(),
+                    "content": one_card.get_content(),
+                    "status": one_card.get_pet_status(),
+                    "images": one_card.get_images()
+                }
+
+        return all_cards
 
     #返回一个宠物的所有相关卡片的信息
     def get_pet_all(self,pet_id): 
@@ -232,6 +251,9 @@ class Card(db.Model):
                                     
     def get_user_id(self):
         return self.user_id
+    
+    def get_pet_status(self):
+        return self.pet_status
 
     def set_images(self,images):
         f_images = str()

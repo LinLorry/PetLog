@@ -6,7 +6,7 @@ from .PetLogDataError import PetLog_DataError
 #----->评论方面
 
 class Comment(db.Model):
-    __tablename__ = "comments"
+    __tablename__ = "Comments"
     id = db.Column(db.String(16), primary_key=True, nullable=False)
     card_id = db.Column(db.String(16), nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
@@ -38,13 +38,15 @@ class Comment(db.Model):
 
     def check_data(self, user_id, data_dict):
         try:
+            if not data_dict['to_author']:
+                if not data_dict['reply_to']:
+                    raise PetLog_DataError("Don't has reply name!")
             if not data_dict['content'] or \
-                    not data_dict['card_id'] or \
-                    not data_dict['user_id'] :
+                    not data_dict['card_id'] :
                 raise PetLog_DataError(
                     'One comment card lack something')
-                data_dict['reply_id']
-                data_dict['to_author']
+            else:
+                data_dict['user_id'] = user_id
         except PetLog_DataError as error:
             print('Error : ' + error.message)
         except KeyError as error:

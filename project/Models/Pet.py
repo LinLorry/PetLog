@@ -5,13 +5,13 @@ from .PetLogDataError import PetLog_DataError
 
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "Pets"
-    pet_id = db.Column(db.String(16), nullable=False, primary_key=True)
+    id = db.Column(db.String(16), nullable=False, primary_key=True)
     category = db.Column(db.String(32), nullable=False)
-    pet_name = db.Column(db.String(20), nullable=False)
+    name = db.Column(db.String(20), nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
     birth_day = db.Column(db.Float, nullable=False)
     gender = db.Column(db.String(8), nullable=False)
-    pet_avatar_path = db.Column(db.String(128),nullable = False)
+    avatar_path = db.Column(db.String(128),nullable = False)
 
     whether_share = db.Column(db.Integer,nullable = False)
     motto = db.Column(db.Text,nullable = True)
@@ -25,14 +25,14 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             if info is None:
                 raise PetLog_DataError("Don't have this id : " + pet_id)
 
-            self.pet_id = info.pet_id
+            self.id = info.id
             self.category = info.category
-            self.pet_name =info.pet_name
+            self.name =info.name
             self.user_id = info.user_id
             self.birth_day = info.birth_day
             self.gender = info.gender
             self.whether_share = info.whether_share
-            self.pet_avatar_path = info.pet_avatar_path
+            self.avatar_path = info.avatar_path
             self.motto = info.motto
             self.meet_day = info.meet_day
         else:
@@ -40,15 +40,15 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
     def create_pet(self, create_dict):
         # 宠物唯一id的生成
-        self.pet_id = str(uuid.uuid1()).split("-")[0]
+        self.id = str(uuid.uuid1()).split("-")[0]
         self.category = create_dict['variety']
-        self.pet_name = create_dict['name']
+        self.name = create_dict['name']
         self.user_id = create_dict['user_id']
         self.gender = create_dict['gender']
         self.set_birth_day(create_dict['birth_day'])
         self.set_meet_day(create_dict['meet_day'])
         self.whether_share = 1
-        self.pet_avatar_path = create_dict['avatar']
+        self.avatar_path = create_dict['avatar']
         self.motto = create_dict['motto']
         return True
 
@@ -59,8 +59,8 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         return True
 
     def update(self,update_dict):
-        that = self.query.filter_by(pet_id=update_dict['id']).first()
-        that.pet_name = update_dict['name']
+        that = self.query.filter_by(id=update_dict['id']).first()
+        that.name = update_dict['name']
         that.motto = update_dict['motto']
         that.avatar = update_dict['avatar']
         that.gender = update_dict['gender']
@@ -85,7 +85,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def check_data(self, user_id, data_dict):
         try:
             if Pet.query.filter(Pet.user_id == user_id,
-                    Pet.pet_name == data_dict['name']):
+                    Pet.name == data_dict['name']):
                 raise PetLog_DataError(
                     "This usre : %s,his pet : %s is exist!" % 
                     (user_id,data_dict['name']))
@@ -120,15 +120,15 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         if info is None:
             raise PetLog_DataError("Don't have this id : " + pet_id)
 
-        self.pet_id = info.pet_id
+        self.id = info.id
         self.category = info.category
         self.detailed_category = info.detailed_category
-        self.pet_name =info.pet_name
+        self.name =info.name
         self.gender = info.gender
         self.user_id = info.user_id
         self.gender = info.gender
         self.whether_share = info.whether_share
-        self.pet_avatar_path = info.pet_avatar_path
+        self.avatar_path = info.avatar_path
 
         #......不止这些还有其他的内容
         return True
@@ -136,7 +136,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def get_detail(pet_id):
         info = Pet.get(pet_id)
         detail ={
-            "name": info.get_id(),
+            "name": info.get_name(),
             "motto": info.get_motto(),
             "avatar": info.get_avatar(),
             "gender": info.get_gender(),
@@ -157,16 +157,30 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         return self.user_id
 
     def get_id(self):
-        return self.pet_id
+        return self.id
 
     def get_name(self):
-        return self.pet_name
+        return self.name
 
     def get_avatar(self):
-        return self.pet_avatar_path
+        return self.avatar_path
+        
+    def get_motto(self):
+        if self.motto:
+            return self.motto
+        else:
+            return None
+
+    def get_gender(self):
+        return self.gender
+
+    def get_category(self):
+        return self.category
 
     def set_birth_day(self,birth_day):
         self.birth_day = time.mktime(time.strptime(birth_day,"%Y-%m-%d"))
     
     def set_meet_day(self,meet_day):
         self.meet_day = time.mktime(time.strptime(meet_day,"%Y-%m-%d"))
+
+

@@ -71,18 +71,29 @@ class user_profile(Resource):
         }
         return jsonify(res)
 
-class user_other_information(Resource):
+class user_other_profile(Resource):
     @login_required
     def post(self):
-        return jsonify(g.user.get_other_information
-                (request.json['user_id']))
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
 
-class guest_get_information(Resource):
-    @checke_interface
+        other_profile = g.user.get_other_profile(re['id'])
+        if other_profile:
+            other_profile['status'] = 1
+            other_profile['message'] = "获取成功"
+            return jsonify(other_profile)
+        else:
+            return jsonify(status = 0,\
+                        message = "failed")
+
+class update_user(Resource):
+    @login_required
     def post(self):
-        user = User("guest")
-        return jsonify(user.get_other_information
-                (request.json['user_id']))
+        mesage = g.user.update_user(request.json)
+        if mesage:
+            return jsonify(status = 1,message = "success")
+        else:
+            return jsonify(status = 0,message = mesage)
 
 class upload_avatar(Resource):
     #上传卡片图像的类
@@ -113,3 +124,10 @@ class upload_avatar(Resource):
         #文件上传成功，返回文件名
         return jsonify(status = 1,\
                     filename = filename)
+
+class guest_get_information(Resource):
+    @checke_interface
+    def post(self):
+        user = User("guest")
+        return jsonify(user.get_other_information
+                (request.json['user_id']))

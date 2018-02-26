@@ -16,7 +16,15 @@ class Tag_with_Card(db.Model):
         return True
 
     def get_cid_with_tid(tag_id):
-        return Tag_with_Card.query.filter(Tag_with_Card.tag_id == tag_id).all()
+        all = Tag_with_Card.query.filter(Tag_with_Card.tag_id == tag_id).all()
+        if all:
+            return all
+        else:
+            return []
 
     def get_tid_with_cid(card_id):
-        return Tag_with_Card.query.filter(Tag_with_Card.card_id == card_id).all()
+        all = Tag_with_Card.query.filter(Tag_with_Card.card_id == card_id).all()
+        if all:
+            return all
+        else:
+            return []

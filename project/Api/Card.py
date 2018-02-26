@@ -88,9 +88,9 @@ class u_get_timeline(Resource):
     @login_required
     def post(self):
         timeline = g.user.get_timeline(request.json['pet_id'])
-        timeline['status'] = 1
-        timeline['message'] = "获取成功"
         if timeline:
+            timeline['status'] = 1
+            timeline['message'] = "获取成功"
             return jsonify(timeline)
         else:
             return jsonify(status = 0,message = "你没有权限获取该宠物的时间轴")
@@ -124,11 +124,36 @@ class get_hot_card(Resource):
 
 # ----------------------------->访客的接口
 
+class get_other_all_cards(Resource):
+    @login_required
+    def get(self):
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
+
+        try:
+            re['lastCursor']
+        except KeyError:
+            re['lastCursor'] = None
+
+        cards = g.user.get_user_all_card(re['id'],re['lastCursor'])
+        if cards:
+            res = {
+                "status":1,
+                "infinited":False,
+                "cards":cards
+            }
+            if len(cards)<5:
+                res['infinited'] = True
+            return jsonify(res)
+        else:
+            return jsonify(status = 0,
+                            message = "failed")
+
 class g_get_timeline(Resource):
     @checke_interface
     def post(self):
         user = User(option="guest")
-        user.verify_data(request.json,"get_timeline")
+        user.verify_data(request.json,verify_dataq="get_timeline")
         return jsonify(g.user.get_timeline(request.json['pet_id']))
 
 # 访客获取卡片的详细内容
