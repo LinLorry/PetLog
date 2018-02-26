@@ -18,7 +18,7 @@ class auth(Resource):
 
 class use_auth(Resource):
     @login_required
-    def post(self):
+    def get(self):
         return jsonify(status = 1, \
                     message = "success")
 

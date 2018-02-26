@@ -66,7 +66,7 @@ class card_comment(Resource):
 # 用户获取朋友圈接口
 class u_get_circle_of_friends(Resource):
     @login_required
-    def post(self):
+    def get(self):
 
         re = request.query_string.decode('utf-8')
         re = parse.parse_qs(re)
@@ -74,9 +74,7 @@ class u_get_circle_of_friends(Resource):
             re['tag']
         except KeyError:
             re['tag'] = None
-        try:
-            re['lastCursor']
-        except KeyError:
+        if re['lastCursor'] is "none":
             re['lastCursor']=None
             
         c_o_f = g.user.get_circle_of_friends(re['tag'],re['lastCursor'])
