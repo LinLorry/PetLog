@@ -11,8 +11,8 @@ class Comment(db.Model):
     card_id = db.Column(db.String(16), nullable=False)
     user_id = db.Column(db.String(16), nullable=False)
     reply_id = db.Column(db.String(16), nullable=True)
-    comment_content = db.Column(db.Text, nullable=False)
-    comment_time = db.Column(db.String(20),nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    time = db.Column(db.Float,nullable=False)
     
     #------>发布卡片的部分
     def comment_on_card(self, comment_card_dict):
@@ -24,9 +24,9 @@ class Comment(db.Model):
         self.id = str(uuid.uuid1()).split("-")[0]
         self.card_id = comment_card_dict['card_id']
         self.user_id = comment_card_dict['user_id']
-        self.comment_content = comment_card_dict['content']
+        self.content = comment_card_dict['content']
         self.set_reply_id(comment_card_dict)
-        self.comment_time = comment_card_dict['comment_time']
+        self.time = time.time()
 
         return True
 
@@ -87,16 +87,16 @@ class Comment(db.Model):
         return one
     
     def get_time(self):
-        return self.comment_time
+        return self.time
 
     def get_tm_date(self):
         year = time.localtime(self.get_time()).tm_year
         mou = time.localtime(self.get_time()).tm_mon
         day = time.localtime(self.get_time()).tm_mday
         if year is time.localtime(time.time()).tm_year:
-            return mou + '-' + day
+            return str(mou) + '-' + str(day)
         else:
-            return year + '-' + mou + '-' + day
+            return str(year) + '-' + str(mou) + '-' + str(day)
     
     def get_comments_with_card_number(card_id):
         return len(Comment.query.filter(Comment.card_id == card_id).all())

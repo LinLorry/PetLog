@@ -2,10 +2,10 @@ import uuid
 import os
 from hashlib import md5
 from urllib import parse
+from werkzeug import secure_filename
 from flask_restful import Resource
 from flask import jsonify, g, request, current_app
-from project.extra import login_required,allowed_image
-from werkzeug import secure_filename
+from project.extra import login_required, allowed_image, checke_interface
 
 class create_pet(Resource):
     @login_required
@@ -64,6 +64,7 @@ class pet_avatar(Resource):
                         message = "failed")
 
 class get_pet_detail(Resource):
+    @checke_interface
     def get(self):
         re = request.query_string.decode('utf-8')
         id = parse.parse_qs(re)['id']

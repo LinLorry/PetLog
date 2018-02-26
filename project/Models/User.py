@@ -80,7 +80,7 @@ class User(db.Model):
                     data_dict['birth_day']
 
         except KeyError as error:
-            print("KeyError : Don't has " + error)
+            print("KeyError : Don't has " + str(error))
             raise KeyError
 
         except PetLog_DataError as error:
@@ -376,7 +376,7 @@ class User(db.Model):
     def create_comment(self, comment_dict):
         comment = Comment()
         comment_dict['user_id'] = self.id
-        comment_dict = comment.check_comment(self.id, comment_dict)
+        comment_dict = comment.check_data(self.id, comment_dict)
         if comment.comment_on_card(comment_dict) \
             and comment.insert():
             return comment.get_tm_date()

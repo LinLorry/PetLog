@@ -10,7 +10,7 @@ class Tag(db.Model):
         all_tag = self.query.all()
         all_content = []
         for nei in all_tag:
-            all_content.append(nei['tag_name'])
+            all_content.append(nei.name)
         return all_content
     
     def get_id(tag_name):

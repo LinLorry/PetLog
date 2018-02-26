@@ -133,16 +133,16 @@ class Card(db.Model):
             # 内容和图片不能同时没有
             if not (data_dict['content'] or
                     data_dict['images']) or \
-                    data_dict['for']:
+                not data_dict['for']:
                 raise PetLog_DataError("Error : One post card lack something")
             else:
                 data_dict['user_id'] = user_id
         except KeyError as error:
             print("KeyError : Don't has " + error)
-            raise KeyError
+            raise error
         except PetLog_DataError as error:
             print(error.message)
-            raise PetLog_DataError
+            raise error
         else:
             return data_dict
 
@@ -225,6 +225,9 @@ class Card(db.Model):
                 "whether_share" : self.whether_share
         }
         return information
+
+    def get_id(self):
+        return self.id
 
     def get_whether_share(self):
         if self.whether_share is 1:

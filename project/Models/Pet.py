@@ -85,7 +85,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def check_data(self, user_id, data_dict):
         try:
             if Pet.query.filter(Pet.user_id == user_id,
-                    Pet.name == data_dict['name']):
+                    Pet.name == data_dict['name']).first():
                 raise PetLog_DataError(
                     "This usre : %s,his pet : %s is exist!" % 
                     (user_id,data_dict['name']))
@@ -114,24 +114,6 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         else:
             return True
 
-    def find_by_id(self, pet_id):  # 传入某一用户的id 返回的是某人的详细信息
-        info = self.query.filter_by(id=pet_id).first()
-
-        if info is None:
-            raise PetLog_DataError("Don't have this id : " + pet_id)
-
-        self.id = info.id
-        self.category = info.category
-        self.detailed_category = info.detailed_category
-        self.name =info.name
-        self.gender = info.gender
-        self.user_id = info.user_id
-        self.gender = info.gender
-        self.whether_share = info.whether_share
-        self.avatar_path = info.avatar_path
-
-        #......不止这些还有其他的内容
-        return True
     
     def get_detail(pet_id):
         info = Pet.get(pet_id)
