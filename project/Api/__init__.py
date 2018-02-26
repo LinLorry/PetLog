@@ -7,8 +7,8 @@ from .Card import u_get_circle_of_friends, u_get_timeline, u_get_card_detail
 from .Card import get_hot_card
 from .Card_images import upload_card_image
 from .Business import follow_interface,upload_avatar, get_followers, get_followings
-from .Business import user_profile_summary
-from .PetBusiness import create_pet, get_user_all_pet,new_pet_avatar, get_pet_detail
+from .Business import user_profile_summary,update_user
+from .PetBusiness import create_pet, get_user_all_pet,new_pet_avatar, get_pet_detail,update_pet
 
 API_blueprint = Blueprint('API',__name__)
 api = Api (API_blueprint)
@@ -16,6 +16,7 @@ api = Api (API_blueprint)
 api.add_resource (auth,"/login")
 api.add_resource (use_auth,"/auth")
 
+api.add_resource(update_user,"/user/update")
 api.add_resource (registered,"/registered")
 api.add_resource (verify_email,"/registered/verify_code")
 api.add_resource (new_user_avatar,"/user/avatar/")
@@ -39,6 +40,7 @@ api.add_resource (get_followings,"/user/get_followings")
 
 api.add_resource (user_profile_summary,"/user/profile_summary")
 
+api.add_resource(update_pet,"/user/pet/update")
 api.add_resource (create_pet,"/user/pet/create_pet")
 api.add_resource (get_user_all_pet,"/user/pet/all_pets")
 api.add_resource (new_pet_avatar,"/user/pet/avater")
