@@ -15,6 +15,16 @@ class create_pet(Resource):
             return jsonify(status = 1, message = "success", id = pet_id)
         else :
             return jsonify(status = 0, message = "failed")
+        
+class update_pet(Resource):
+    @login_required
+    def post(self):
+        mesage = g.pet.check_updata_data(request.json)
+        if mesage:
+            a = g.pet.update(request.json)
+            return jsonify(status = 1,message = "success")
+        else:
+            return jsonify(status = 0,message = mesage)
 
 class get_user_all_pet(Resource):
     @login_required
