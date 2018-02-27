@@ -17,7 +17,7 @@ class Card(db.Model):
     content = db.Column(db.Text, nullable=True)
     images = db.Column(db.String(128), nullable=True)
     time = db.Column(db.Float, nullable=False)
-    whether_share = db.Column(db.Bool,nullable = False)
+    whether_share = db.Column(db.Boolean,nullable = False)
     
     #------>发布动态
 

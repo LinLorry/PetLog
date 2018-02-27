@@ -13,7 +13,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     gender = db.Column(db.String(8), nullable=False)
     avatar_path = db.Column(db.String(128),nullable = False)
 
-    whether_share = db.Column(db.Bool,nullable = False)
+    whether_share = db.Column(db.Boolean,nullable = False)
     motto = db.Column(db.Text,nullable = True)
     meet_day = db.Column(db.Float,nullable = False)
 
