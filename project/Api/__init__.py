@@ -4,7 +4,7 @@ from .Auths import auth,use_auth
 from .Registered import registered,verify_email, user_avatar
 from .Card import get_tags, post_card,card_comment,praise_interface
 from .Card import u_get_circle_of_friends, u_get_timeline, u_get_card_detail
-from .Card import get_hot_card, get_hot_card
+from .Card import get_hot_card, get_hot_card,get_other_all_cards
 from .Card_images import upload_card_image
 from .Business import follow_interface,upload_avatar, get_followers, get_followings
 from .Business import user_profile_summary, user_profile, update_user, user_other_profile
