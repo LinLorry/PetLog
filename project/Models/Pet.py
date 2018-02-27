@@ -13,7 +13,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     gender = db.Column(db.String(8), nullable=False)
     avatar_path = db.Column(db.String(128),nullable = False)
 
-    whether_share = db.Column(db.Integer,nullable = False)
+    whether_share = db.Column(db.Bool,nullable = False)
     motto = db.Column(db.Text,nullable = True)
     meet_day = db.Column(db.Float,nullable = False)
 
@@ -47,7 +47,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         self.gender = create_dict['gender']
         self.set_birth_day(create_dict['birth_day'])
         self.set_meet_day(create_dict['meet_day'])
-        self.whether_share = 1
+        self.whether_share = True
         self.avatar_path = create_dict['avatar']
         self.motto = create_dict['motto']
         return True
@@ -144,10 +144,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
 
     def get_whether_share(self):
-        if self.get_whether_share is 1:
-            return True
-        else:
-            return False
+        return self.get_whether_share
             
     def get_user_id(self):
         return self.user_id

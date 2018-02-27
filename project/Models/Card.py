@@ -17,7 +17,7 @@ class Card(db.Model):
     content = db.Column(db.Text, nullable=True)
     images = db.Column(db.String(128), nullable=True)
     time = db.Column(db.Float, nullable=False)
-    whether_share = db.Column(db.Integer,nullable = False)
+    whether_share = db.Column(db.Bool,nullable = False)
     
     #------>发布动态
 
@@ -37,13 +37,13 @@ class Card(db.Model):
         self.user_id = create_dict['user_id']
         self.pet_id = create_dict['for']
         self.time = time.time()
-        self.pet_status = data_dict['status']
+        self.pet_status = create_dict['status']
 
         # 以下部分为发布卡片不一样要携带的信息
         self.set_content(create_dict['content'])
         self.set_images(create_dict['images'])
 
-        self.whether_share = 1
+        self.whether_share = True
 
         return True
 
@@ -230,10 +230,7 @@ class Card(db.Model):
         return self.id
 
     def get_whether_share(self):
-        if self.whether_share is 1:
-            return True
-        else:
-            return False
+        return self.whether_share
 
     def get_time(self):
         return self.time
