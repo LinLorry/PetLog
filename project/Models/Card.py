@@ -2,6 +2,7 @@ import uuid
 import random
 import time
 from project import db
+from .Praise import Praise
 from .Tag import Tag
 from .Tag_with_card import Tag_with_Card
 from .PetLogDataError import PetLog_DataError
@@ -18,18 +19,6 @@ class Card(db.Model):
     time = db.Column(db.Float, nullable=False)
     whether_share = db.Column(db.Integer,nullable = False)
     
-    def __init__(self,card_id = None):
-        if card_id:
-            info = self.query.filter_by(id=card_id).first()
-            self.id = info.id
-            self.user_id = info.user_id
-            self.pet_id = info.pet_id
-            self.content = info.content
-            self.images = info.images
-            self.time = info.time
-            self.whether_share = info.whether_share
-        else:
-            pass
     #------>发布动态
 
     def create_card(self, create_dict):
@@ -48,12 +37,14 @@ class Card(db.Model):
         self.user_id = create_dict['user_id']
         self.pet_id = create_dict['for']
         self.time = time.time()
-        
+        self.pet_status = data_dict['status']
+
         # 以下部分为发布卡片不一样要携带的信息
         self.set_content(create_dict['content'])
         self.set_images(create_dict['images'])
 
         self.whether_share = 1
+
         return True
 
     def insert(self):
@@ -65,8 +56,8 @@ class Card(db.Model):
     def timeline(pet_id):
         items = []
         info = Card.query.filter(Card.pet_id == pet_id).\
-                    order_by(Card.tag_id.asc()).all()
-        if info is None:
+                    order_by(Card.time.asc()).all()
+        if info is None :
             return []
         
         day = info[0].get_tm_yday()
@@ -108,7 +99,10 @@ class Card(db.Model):
                     one_year['year'] = year
             else:
                 one_day_items.append(one_card)
-
+        else:
+            one_day['items'] = one_day_items
+            items.append(one_day)
+                
         return items
 
     def hot(cards_id):
@@ -181,8 +175,8 @@ class Card(db.Model):
         cards = Card.query.filter(Card.user_id == user_id).\
                         order_by(Card.time.asc())
         if last_id:
-            last_time = Card.query.get(last_id).first().get_time()
-            cards = cards.filter(Card.time <last_time)
+            last_time = Card.query.get(last_id).get_time()
+            cards = cards.filter(Card.time < last_time)
         
         cards = cards.limit(5).all()
         all_cards =[]
@@ -195,8 +189,14 @@ class Card(db.Model):
                     "time": one_card.get_card_date(),
                     "content": one_card.get_content(),
                     "status": one_card.get_pet_status(),
-                    "images": one_card.get_images()
+                    "images": one_card.get_images(),
+                    "tags":[]
                 }
+                card = {
+                    "id": one_card.get_id(),
+                    "post": post
+                }
+                all_cards.append(card)
 
         return all_cards
 
@@ -218,14 +218,11 @@ class Card(db.Model):
     #根据用户id判断是否可以获取卡片细节，如果是访客，user_id为guest
     def get_detail(self, card_id):
         information ={
-                "id" : self.id,
-                "user_id" : self.user_id,
-                "pet_id" : self.pet_id,
-                "card_content" : self.content,
-                "card_image_path" : self.image_path,
-                "card_time" : self.time,
-                "card_type" : self.type,
-                "whether_share" : self.whether_share
+                "status": self.get_pet_status(),
+                "content": self.content,
+                "images": self.get_images(),
+                "time": self.get_card_date(),
+				"tags": self.get_tags()
         }
         return information
 
@@ -247,9 +244,7 @@ class Card(db.Model):
     def get_tm_year(self):
         return time.localtime(self.get_time()).tm_year
 
-    def get_age(self):
-        return time.localtime(time.time()).tm_year - \
-                time.localtime(self.get_time()).tm_year
+
     
     def get_card_date(self):
         return time.strftime("%m-%d",time.localtime(
@@ -258,6 +253,9 @@ class Card(db.Model):
     def get_user_id(self):
         return self.user_id
     
+    def get_pet_id(self):
+        return self.pet_id
+
     def get_pet_status(self):
         return self.pet_status
 
@@ -265,7 +263,18 @@ class Card(db.Model):
         return self.content
 
     def get_images(self):
-        return self.images.split(" ")
+        if self.images is None:
+            return []
+        else:
+            return self.images.split(" ")[1:]
+
+    def get_tags(self):
+        tags_id = Tag_with_Card.get_tid_with_cid(self.get_id())
+        tags_name = []
+        if tags_id:
+            for tag_id in tags_id:
+                tags_name.append(Tag.get_name(tag_id))
+        return tags_name
 
     def set_images(self,images):
         f_images = str()
@@ -281,4 +290,6 @@ class Card(db.Model):
             self.content =content
         else:
             self.content = None
+
+
 

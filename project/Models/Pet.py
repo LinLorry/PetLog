@@ -72,9 +72,9 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         
         return True
 
-    def user_all_pets(self, user_id):
+    def user_all_pets(user_id):
         # 时间轴界面下获取某用户所有宠物的id
-        pets = self.query.filter_by(user_id=user_id).all()
+        pets = Pet.query.filter_by(user_id=user_id).all()
         all_pets = []
         for pet in pets:
             all_pets.append({'id': pet.get_id(), 
@@ -109,18 +109,25 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
             return data_dict
         
     def check_update_data(self,data_dict):
-        if data_dict['name'] is  None:
-            return "名字不得为空"
+        if not data_dict['name'] or \
+            not data_dict['id']  or \
+            not data_dict['motto'] or \
+            not data_dict['avatar'] or \
+            not data_dict['gender'] or \
+            not data_dict['birth_day'] or \
+            not data_dict['meet_day'] or \
+            not data_dict['variety'] :
+            return False
         else:
             return True
 
     
     def get_detail(pet_id,user_id):
         info = Pet.query.get(pet_id)
-        if info.get_user_id == user_id:
+        if info.get_user_id() == user_id:
             return {
                 "status": 1,
-                "message": "已经找到您的宠物"
+                "message": "已经找到您的宠物",
                 "name": info.get_name(),
                 "motto": info.get_motto(),
                 "avatar": info.get_avatar(),
@@ -167,10 +174,14 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         return self.meet_day
 
     def get_birth(self):
-        return time.strftime("%m-%d",time.localtime(self.get_birth_day()))
+        return time.strftime("%Y-%m-%d",time.localtime(self.get_birth_day()))
 
     def get_meet(self):
-        return time.strftime("%m-%d",time.localtime(self.get_meet_day()))
+        return time.strftime("%Y-%m-%d",time.localtime(self.get_meet_day()))
+
+    def get_age(self):
+        return time.localtime(time.time()).tm_year - \
+                time.localtime(self.get_birth_day()).tm_year
 
     def get_gender(self):
         return self.gender

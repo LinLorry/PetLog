@@ -77,7 +77,7 @@ class user_avatar(Resource):
             m = md5()
             m.update((str1 + str2).encode ('utf-8'))
 
-            filename = str(m.hexdigest())[-8:8] + str3
+            filename = str(m.hexdigest()) + str3
 
             file.save (os.path.join(
                 current_app.config['USER_AVATAR_FOLDER'],

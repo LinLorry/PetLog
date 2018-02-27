@@ -67,7 +67,6 @@ class card_comment(Resource):
 class u_get_circle_of_friends(Resource):
     @login_required
     def get(self):
-
         re = request.query_string.decode('utf-8')
         re = parse.parse_qs(re)
         try:
@@ -75,17 +74,19 @@ class u_get_circle_of_friends(Resource):
         except KeyError:
             re['tag'] = None
         if re['lastCursor'][0].cmp("none"):
-            re['lastCursor']=None
-            
-        c_o_f = g.user.get_circle_of_friends(re['tag'],re['lastCursor'])
+            re['lastCursor'][0]=None
+    
+        c_o_f = g.user.get_circle_of_friends(re['tag'],re['lastCursor'][0])
         c_o_f['status'] = 1
         return jsonify(c_o_f)
 
 # 用户获取时间轴的接口
 class u_get_timeline(Resource):
     @login_required
-    def post(self):
-        timeline = g.user.get_timeline(request.json['pet_id'])
+    def get(self):
+        re = request.query_string.decode('utf-8')
+        re = parse.parse_qs(re)
+        timeline = g.user.get_timeline(re['id'][0])
         if timeline:
             timeline['status'] = 1
             timeline['message'] = "获取成功"
@@ -115,8 +116,7 @@ class get_hot_card(Resource):
             re['tag']
         except KeyError:
             re['tag'] = None
-        user = User()
-        hot = user.get_hot_card(re['tag'])
+        hot = User.get_hot_card(re['tag'])
         hot['status'] = 1
         return jsonify(hot)
 
@@ -128,10 +128,10 @@ class get_other_all_cards(Resource):
         re = request.query_string.decode('utf-8')
         re = parse.parse_qs(re)
 
-        if re['lastCursor'] is ["none"]:
-            re['lastCursor'] = None
+        if re['lastCursor'][0] == ["none"]:
+            re['lastCursor'][0] = None
 
-        cards = g.user.get_user_all_card(re['id'],re['lastCursor'])
+        cards = g.user.get_user_all_card(re['id'][0],re['lastCursor'][0])
         if cards:
             res = {
                 "status":1,
@@ -148,8 +148,7 @@ class get_other_all_cards(Resource):
 class g_get_timeline(Resource):
     @checke_interface
     def post(self):
-        user = User(option="guest")
-        user.verify_data(request.json,verify_dataq="get_timeline")
+        User.verify_data(request.json,verify_type="get_timeline")
         return jsonify(g.user.get_timeline(request.json['pet_id']))
 
 # 访客获取卡片的详细内容

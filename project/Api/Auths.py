@@ -6,7 +6,7 @@ from project.extra import login_required,checke_interface
 class auth(Resource):
     @checke_interface
     def post(self):
-        user = User("user")
+        user = User()
         user_data = User.verify_data(request.json,"auth")
         user.find_by_email(user_data['email'])
         if user.verify_password(user_data['password']):

@@ -67,17 +67,17 @@ class user_profile(Resource):
         res = {
             "status": 1,
             "message": "获取成功",
-            "user1": profile
+            "user": profile
         }
         return jsonify(res)
 
 class user_other_profile(Resource):
     @login_required
-    def post(self):
+    def get(self):
         re = request.query_string.decode('utf-8')
         re = parse.parse_qs(re)
 
-        other_profile = g.user.get_other_profile(re['id'])
+        other_profile = g.user.get_other_profile(re['id'][0])
         if other_profile:
             other_profile['status'] = 1
             other_profile['message'] = "获取成功"
@@ -128,6 +128,6 @@ class upload_avatar(Resource):
 class guest_get_information(Resource):
     @checke_interface
     def post(self):
-        user = User("guest")
+        user = User()
         return jsonify(user.get_other_information
                 (request.json['user_id']))

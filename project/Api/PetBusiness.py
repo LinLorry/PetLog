@@ -18,13 +18,11 @@ class create_pet(Resource):
         
 class update_pet(Resource):
     @login_required
-    def get(self):
-        mesage = g.pet.check_updata_data(request.json)
-        if mesage:
-            a = g.pet.update(request.json)
+    def post(self):
+        if g.user.update_pet(request.json):
             return jsonify(status = 1,message = "success")
         else:
-            return jsonify(status = 0,message = mesage)
+            return jsonify(status = 0,message = "失败")
 
 class get_user_all_pet(Resource):
     @login_required
@@ -50,7 +48,7 @@ class pet_avatar(Resource):
             m = md5()
             m.update((str1 + str2).encode ('utf-8'))
 
-            filename = str(m.hexdigest()[8:-8]) + str3
+            filename = str(m.hexdigest()) + str3
 
             file.save (os.path.join(
                 current_app.config['PET_AVATAR_FOLDER'],

@@ -27,7 +27,7 @@ class upload_card_image(Resource):
         else:
             return jsonify(status = 0,\
                         message = "failed") '''
-        str1 = g.user.get_user_id()
+        str1 = g.user.get_id()
         str2 = str(uuid.uuid1()).split("-")[0]
         str3 = '.png'
         

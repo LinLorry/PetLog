@@ -37,12 +37,10 @@ class User(db.Model):
                 info = User.query.filter(User.id == content).first()
             elif option == 'email':
                 info = User.query.filter(User.email == content).first()
-            self.id = info.id()
+            self.id = info.get_id()
             self.nickname = info.nickname
             self.password_hash = info.password_hash
             self.address = info.address
-            
-            self.phonenumber =info.phonenumber
             self.gender = info.gender
         elif option == 'default':
             pass
@@ -74,18 +72,16 @@ class User(db.Model):
                     not data_dict['location']:
                     raise PetLog_DataError(
                         "One update lack something")
-                if User.query.get(data_dict['id']) is None:
-                    raise PetLog_DataError("Don't has this user id!")
-                    data_dict['motto']
-                    data_dict['birth_day']
+                data_dict['motto']
+                data_dict['birth_day']
 
         except KeyError as error:
             print("KeyError : Don't has " + str(error))
-            raise KeyError
+            raise error
 
         except PetLog_DataError as error:
             print("Error : " + error.message)
-            raise PetLog_DataError
+            raise error
 
         else:
             return data_dict
@@ -141,9 +137,9 @@ class User(db.Model):
                 'new_motto': '我没什么好说的，怎么还没完成',
                 'new_address': '江西上饶'}'''
 
-    def update_user(update_dict):
+    def update_user(self,update_dict):
         update_dict = User.verify_data(update_dict,"update")
-        it = User.query.get(update_dict['id'])
+        it = User.query.get(self.get_id())
         it.nickname = update_dict['name']
         it.gender = update_dict['gender']
         it.avatar_path = update_dict['avatar']
@@ -152,6 +148,7 @@ class User(db.Model):
         it.set_birth(update_dict['birth_day'])
         db.session.add(it)
         db.session.commit()
+        return True
 
     # --------------------------->用户的操作部分
 
@@ -169,8 +166,7 @@ class User(db.Model):
             return False
 
     def get_all_pets(self):
-        pet = Pet()
-        pets = pet.user_all_pets(self.get_id())
+        pets = Pet.user_all_pets(self.get_id())
         pet_list = {
             "status":1,
             "pets":pets
@@ -178,7 +174,16 @@ class User(db.Model):
         return pet_list
 
     def get_pet_detail(self,pet_id):
-        return Pet.get_pet_detail(pet_id,self.get_id())
+        return Pet.get_detail(pet_id,self.get_id())
+
+    def update_pet(self,pet_dict):
+        pet = Pet()
+        if pet.check_update_data(pet_dict):
+            pet.update(pet_dict)
+            return True
+        else:
+            return False
+        
 
     # -------------------->用户的卡片部分的操作
 
@@ -211,7 +216,7 @@ class User(db.Model):
             "mooto" : pet.get_motto(),
             "items": []
         }
-        if pet.get_id == self.get_id():
+        if pet.get_id() == self.get_id():
             timeline['status'] = 1
         elif pet.get_whether_share():
             timeline['status'] = 0
@@ -250,7 +255,7 @@ class User(db.Model):
 
         return friend
 
-    def get_hot_card(self, tags_name):
+    def get_hot_card(tags_name):
         if tags_name:
             cards_id = []
             for tag_name in tags_name:
@@ -279,7 +284,10 @@ class User(db.Model):
         return hot
 
     def get_user_all_card(self,user_id,last_id):
-        cards = Card.get_user_all_card(id,last_id)
+        if not user_id:
+            raise PetLog_DataError("One query user cards don't has user id.")
+        
+        cards = Card.get_user_all_card(user_id,last_id)
         for card in cards:
             card['liked'] = Praise.check_praise(self.get_id(),card['id'])
             card['comments'] = Comment.\
@@ -287,7 +295,7 @@ class User(db.Model):
                         card['id'])
             for tag_id in Tag_with_Card.get_tid_with_cid(card['id']):
                 card['post']['tags'].append(Tag.get_name(tag_id))
-            cards['post']['likes'] = Praise.find_praise_number(card['id'])
+            card['post']['likes'] = Praise.find_praise_number(card['id'])
         
         return cards
 
@@ -306,11 +314,12 @@ class User(db.Model):
             post = {
                 "time":card.get_card_date(),
                 "content":card.get_content(),
-                "status":card.get_status(),
+                "status":card.get_pet_status(),
                 "tags":[],
                 "likes":Praise.find_praise_number(card.get_id()),
                 "images":card.get_images()
             }
+            
             for tag_id in Tag_with_Card.get_tid_with_cid(card.get_id()):
                 post['tags'].append(Tag.get_name(tag_id))
             comments = Comment.get_comments_with_card_number(card.get_id())
@@ -325,17 +334,19 @@ class User(db.Model):
         return all_card
 
     def get_card_detail(self, card_id):
-        card = Card(card_id)
-        if card.get_card_id() is self.get_id():
+        card = Card.query.get(card_id)
+        if card.get_card_id() == self.get_id():
             author = self
             post = card.get_detail(card_id)
         elif card.get_whether_share():
             pet = Pet(pet_id = card.get_pet_id())
             if pet.get_whether_share:
-                author = User(card.get_id())
+                author = User.query.get(card.get_user_id())
                 post = card.get_detail(card_id)
         else:
             return False
+
+        post['like'] = Praise.find_praise_number(card.get_id())
 
         author_detail = {
             "name":author.get_nickname(),
@@ -407,8 +418,7 @@ class User(db.Model):
             return False
 
     def get_followers(self):
-        follow = Follow()
-        followers_id = follow.get_followers(self.get_id())
+        followers_id = Follow.get_followers(self.get_id())
         followers = []
         
         for id in followers_id:
@@ -427,7 +437,7 @@ class User(db.Model):
     # --------->获取用户关注用户
     def get_followings(self):
         follow = Follow()
-        followings_id = follow.get_followings_id(self.get_id())
+        followings_id = Follow.get_followings_id(self.get_id())
         followings = []
 
         for id in followings_id:
@@ -460,7 +470,7 @@ class User(db.Model):
 
     def get_profile(self):
         user = {
-            "name": self.get_id(),
+            "name": self.get_nickname(),
             "avatar": self.get_avatar(),
             "motto":self.get_motto(),
             "gender": self.get_gender(),
@@ -471,7 +481,7 @@ class User(db.Model):
 
     #获取他人的信息，user_id是查找的用户id
     def get_other_profile(self,user_id):
-        other = User(content=user_id,option="id")
+        other = User.query.get(user_id)
 
         followed = Follow.check_follow(self.get_id(),
                                         other.get_id())
@@ -513,11 +523,10 @@ class User(db.Model):
 
     # --------------------------->用户属性部分结束
 
-
     # 获取token的方法，默认时间是10分钟(10*60秒)
     # 密钥使用配置属性，配置属性来自系统变量在project.__init__.py里
     # 加上用户名好在检查token结束后，构造用户对象
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=7200):
         s = Serializer(current_app.config['SECRET_KEY'],
                        expires_in=expiration)
         return s.dumps({'id': self.id,
