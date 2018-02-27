@@ -17,4 +17,4 @@ print (os.environ.get('PETLOG_USER_AVATAR_FOLDER'))
 print (os.environ.get('PETLOG_PET_AVATAR_FOLDER'))
 
 if __name__ == "__main__" :
-    app.run (host = '0.0.0.0',debug = True)
+    app.run (debug = True)
