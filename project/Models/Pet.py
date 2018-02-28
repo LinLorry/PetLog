@@ -63,7 +63,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         that = self.query.filter_by(id=update_dict['id']).first()
         that.name = update_dict['name']
         that.motto = update_dict['motto']
-        that.avatar = update_dict['avatar']
+        that.avatar_path = update_dict['avatar']
         that.gender = update_dict['gender']
         that.set_birth_day(update_dict['birth_day'])
         that.set_meet_day(update_dict['meet_day'])
