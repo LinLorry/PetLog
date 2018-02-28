@@ -3,6 +3,7 @@ import time
 from project import db
 from .PetLogDataError import PetLog_DataError
 
+
 class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     __tablename__ = "Pets"
     id = db.Column(db.String(16), nullable=False, primary_key=True)
@@ -11,14 +12,14 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     user_id = db.Column(db.String(16), nullable=False)
     birth_day = db.Column(db.Float, nullable=False)
     gender = db.Column(db.String(8), nullable=False)
-    avatar_path = db.Column(db.String(128),nullable = False)
+    avatar_path = db.Column(db.String(128), nullable=False)
 
-    whether_share = db.Column(db.Boolean,nullable = False)
-    motto = db.Column(db.Text,nullable = True)
-    meet_day = db.Column(db.Float,nullable = False)
+    whether_share = db.Column(db.Boolean, nullable=False)
+    motto = db.Column(db.Text, nullable=True)
+    meet_day = db.Column(db.Float, nullable=False)
 
     # 宠物的构造函数，用于查找一个宠物
-    def __init__(self, pet_id = None):
+    def __init__(self, pet_id=None):
         if pet_id:
             info = self.query.filter_by(id=pet_id).first()
 
@@ -27,7 +28,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
             self.id = info.id
             self.category = info.category
-            self.name =info.name
+            self.name = info.name
             self.user_id = info.user_id
             self.birth_day = info.birth_day
             self.gender = info.gender
@@ -58,7 +59,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         db.session.commit()
         return True
 
-    def update(self,update_dict):
+    def update(self, update_dict):
         that = self.query.filter_by(id=update_dict['id']).first()
         that.name = update_dict['name']
         that.motto = update_dict['motto']
@@ -69,7 +70,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         that.category = update_dict['variety']
         db.session.add(that)
         db.session.commit()
-        
+
         return True
 
     def user_all_pets(user_id):
@@ -77,18 +78,20 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         pets = Pet.query.filter_by(user_id=user_id).all()
         all_pets = []
         for pet in pets:
-            all_pets.append({'id': pet.get_id(), 
-                        'name': pet.get_name(),
-                        "avatar":pet.get_avatar()})
+            all_pets.append({
+                'id': pet.get_id(),
+                'name': pet.get_name(),
+                "avatar": pet.get_avatar()
+            })
         return all_pets
 
     def check_data(self, user_id, data_dict):
         try:
             if Pet.query.filter(Pet.user_id == user_id,
-                    Pet.name == data_dict['name']).first():
+                                Pet.name == data_dict['name']).first():
                 raise PetLog_DataError(
-                    "This usre : %s,his pet : %s is exist!" % 
-                    (user_id,data_dict['name']))
+                    "This usre : %s,his pet : %s is exist!" %
+                    (user_id, data_dict['name']))
             elif not data_dict['motto'] or \
                     not data_dict['variety'] or \
                     not data_dict['gender'] or \
@@ -96,19 +99,18 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
                     not data_dict['birth_day'] or \
                     not data_dict['avatar'] or\
                     not data_dict['gender']:
-                raise PetLog_DataError(
-                    'One create_pet lack something')
+                raise PetLog_DataError('One create_pet lack something')
             else:
                 data_dict['user_id'] = user_id
         except KeyError as error:
-            print ("Error : dict lack some key!")
+            print("Error : dict lack some key!")
             raise error
         except PetLog_DataError as error:
             raise error
         else:
             return data_dict
-        
-    def check_update_data(self,data_dict):
+
+    def check_update_data(self, data_dict):
         if not data_dict['name'] or \
             not data_dict['id']  or \
             not data_dict['motto'] or \
@@ -121,8 +123,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         else:
             return True
 
-    
-    def get_detail(pet_id,user_id):
+    def get_detail(pet_id, user_id):
         info = Pet.query.get(pet_id)
         if info.get_user_id() == user_id:
             return {
@@ -137,15 +138,11 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
                 "variety": info.get_category()
             }
         else:
-            return {
-                "status": 0,
-                "message": "不好意思，这不是您的宠物"
-            }
-
+            return {"status": 0, "message": "不好意思，这不是您的宠物"}
 
     def get_whether_share(self):
         return self.get_whether_share
-            
+
     def get_user_id(self):
         return self.user_id
 
@@ -157,7 +154,7 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
 
     def get_avatar(self):
         return self.avatar_path
-        
+
     def get_motto(self):
         if self.motto:
             return self.motto
@@ -171,10 +168,10 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
         return self.meet_day
 
     def get_birth(self):
-        return time.strftime("%Y-%m-%d",time.localtime(self.get_birth_day()))
+        return time.strftime("%Y-%m-%d", time.localtime(self.get_birth_day()))
 
     def get_meet(self):
-        return time.strftime("%Y-%m-%d",time.localtime(self.get_meet_day()))
+        return time.strftime("%Y-%m-%d", time.localtime(self.get_meet_day()))
 
     def get_age(self):
         return time.localtime(time.time()).tm_year - \
@@ -186,11 +183,8 @@ class Pet(db.Model):  # 待补充，宠物头像，以及宠物的介绍
     def get_category(self):
         return self.category
 
-    def set_birth_day(self,birth_day):
-        self.birth_day = time.mktime(time.strptime(birth_day,"%Y-%m-%d"))
-    
-    def set_meet_day(self,meet_day):
-        self.meet_day = time.mktime(time.strptime(meet_day,"%Y-%m-%d"))
-        
+    def set_birth_day(self, birth_day):
+        self.birth_day = time.mktime(time.strptime(birth_day, "%Y-%m-%d"))
 
-
+    def set_meet_day(self, meet_day):
+        self.meet_day = time.mktime(time.strptime(meet_day, "%Y-%m-%d"))

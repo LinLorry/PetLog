@@ -15,15 +15,13 @@ class registered(Resource):
     def post(self):
         if self.verify_code(request.json):
             user = User()
-            user_dict = User.verify_data(request.json,verify_type = 'register')
+            user_dict = User.verify_data(request.json, verify_type='register')
             user.create_user(user_dict)
             user.insert()
 
-            return jsonify(status=1,
-                        message="success")
+            return jsonify(status=1, message="注册成功！")
         else:
-            return jsonify(status=0,
-                        message='failed')
+            return jsonify(status=0, message='注册失败，请重试！')
 
     def verify_code(self, code_dict):
         #str1 是用户的email
@@ -44,23 +42,25 @@ class registered(Resource):
         else:
             return True
 
+
 class verify_email(Resource):
     @checke_interface
     def post(self):
         email = request.json['email']
         if not email.strip():
-            return jsonify(status=0,
-                        message = "failed")
+            return jsonify(status=0, message="failed")
 
-        code = ''.join(random.sample([chr(i) for i in range(65,91)] + 
-                                    [chr(i) for i in range(48,58)],5))
-        send_registered_email(email,code)
-        
+        code = ''.join(
+            random.sample(
+                [chr(i)
+                 for i in range(65, 91)] + [chr(i) for i in range(48, 58)], 5))
+        send_registered_email(email, code)
+
         m = md5()
         m.update(code.encode('utf-8'))
 
-        return jsonify(status=1,
-                    code=m.hexdigest())
+        return jsonify(status=1, code=m.hexdigest())
+
 
 class user_avatar(Resource):
     @checke_interface
@@ -75,14 +75,14 @@ class user_avatar(Resource):
             str3 = '.' + file.filename.rsplit('.')[1]
 
             m = md5()
-            m.update((str1 + str2).encode ('utf-8'))
+            m.update((str1 + str2).encode('utf-8'))
 
             filename = str(m.hexdigest()) + str3
 
-            file.save (os.path.join(
-                current_app.config['USER_AVATAR_FOLDER'],
-                filename))
-            
+            file.save(
+                os.path.join(current_app.config['USER_AVATAR_FOLDER'],
+                             filename))
+
             #文件上传成功，返回文件名
             return jsonify(status = 1,\
                     filename = filename)

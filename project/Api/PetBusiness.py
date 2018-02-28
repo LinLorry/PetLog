@@ -7,22 +7,25 @@ from flask_restful import Resource
 from flask import jsonify, g, request, current_app
 from project.extra import login_required, allowed_image, checke_interface
 
+
 class create_pet(Resource):
     @login_required
     def post(self):
         pet_id = g.user.create_pet(request.json)
         if pet_id:
-            return jsonify(status = 1, message = "success", id = pet_id)
-        else :
-            return jsonify(status = 0, message = "failed")
-        
+            return jsonify(status=1, message="宠物信息创建成功！", id=pet_id)
+        else:
+            return jsonify(status=0, message="创建宠物信息失败，请重试！")
+
+
 class update_pet(Resource):
     @login_required
     def post(self):
         if g.user.update_pet(request.json):
-            return jsonify(status = 1,message = "success")
+            return jsonify(status=1, message="更新宠物信息成功！")
         else:
-            return jsonify(status = 0,message = "失败")
+            return jsonify(status=0, message="更新宠物信息失败，请重试！")
+
 
 class get_user_all_pet(Resource):
     @login_required
@@ -31,7 +34,8 @@ class get_user_all_pet(Resource):
         if pet_list:
             return jsonify(pet_list)
         else:
-            return jsonify(status = 0, message = "failed")
+            return jsonify(status=0, message="获取宠物列表失败，请重试！")
+
 
 class pet_avatar(Resource):
     @login_required
@@ -46,20 +50,21 @@ class pet_avatar(Resource):
             str3 = '.' + file.filename.rsplit('.')[1]
 
             m = md5()
-            m.update((str1 + str2).encode ('utf-8'))
+            m.update((str1 + str2).encode('utf-8'))
 
             filename = str(m.hexdigest()) + str3
 
-            file.save (os.path.join(
-                current_app.config['PET_AVATAR_FOLDER'],
-                filename))
-            
+            file.save(
+                os.path.join(current_app.config['PET_AVATAR_FOLDER'],
+                             filename))
+
             #文件上传成功，返回文件名
             return jsonify(status = 1,\
                     filename = filename)
         else:
             return jsonify(status = 0,\
                         message = "failed")
+
 
 class get_pet_detail(Resource):
     @login_required

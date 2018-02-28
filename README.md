@@ -29,9 +29,9 @@ PETLOG\_MAIL\_PASSWORD:邮箱系统密码
 
 ## API说明：
 
-###用户注册及登录:
-####url: host:5000/api/registered  (注册)
-#####methods:"POST"
+### 用户注册及登录:
+#### url: host:5000/api/registered  (注册)
+##### methods:"POST"
 Request:
 ```
 {
@@ -50,8 +50,8 @@ Response:
     "message":"success"/"failed"
 }
 ```
-####url: host:5000/api/registered/verify_code  (邮箱认证）
-#####methods:"POST"
+#### url: host:5000/api/registered/verify_code  (邮箱认证）
+##### methods:"POST"
 Request:
 ```
 {
@@ -66,8 +66,8 @@ Response:
 }
 ```
 
-####url: host:5000/api/auth  (检查是否登录状态下)
-#####methods:"GET"
+#### url: host:5000/api/auth  (检查是否登录状态下)
+##### methods:"GET"
 Request:
 ```
 
@@ -80,8 +80,8 @@ Response:
     "message: "ok"/"failed"
 }
 ```
-####url: host:5000/api/login (登录）  
-#####methods:"POST"
+#### url: host:5000/api/login (登录）  
+##### methods:"POST"
 Request:
 ```
 {
@@ -97,9 +97,9 @@ Response:
     "token":            "message":"failed"
 }
 ```
-###用户个人信息查询及更改
-####url: host:5000/api/user/profile(个人信息获取)
-#####methods:"GET"
+### 用户个人信息查询及更改
+#### url: host:5000/api/user/profile(个人信息获取)
+##### methods:"GET"
 Response:
 ```
 {
@@ -115,8 +115,8 @@ Response:
     }
 }
 ```
-####url: host:5000/api/user/avatar(头像上传）
-#####methods:"POST"
+#### url: host:5000/api/user/avatar(头像上传）
+##### methods:"POST"
 Request:
 ```
 {
@@ -131,8 +131,8 @@ Response:
     "filename":                 "message":"faied"
 }
 ```
-####url: host:5000/api/user/update(修改用户个人资料)
-#####methods:"POST"
+#### url: host:5000/api/user/update(修改用户个人资料)
+##### methods:"POST"
 Request:
 ```
 {
@@ -152,9 +152,9 @@ Response:
     "message":"success"           "message":"failed"
 }
 ```
-###用户操作
-####url: host:5000/tags/get_tags(获取所有Tag)
-#####methods:"GET"
+### 用户操作
+#### url: host:5000/tags/get_tags(获取所有Tag)
+##### methods:"GET"
 Response:
 ```
 {
@@ -162,8 +162,8 @@ Response:
     "tags":Array       "tags":Array
 }
 ```
-####url: host:5000/user/post_card(发布动态)
-#####methods:"POST"
+#### url: host:5000/user/post_card(发布动态)
+##### methods:"POST"
 Request:
 ```
 {
@@ -182,8 +182,8 @@ Response:
     "message":"success"   "message":"failed"
 }
 ```
-####url: host:5000/api/user/post_comment(发表评论）
-#####methods:"POST"
+#### url: host:5000/api/user/post_comment(发表评论）
+##### methods:"POST"
 Requuest:
 ```
 {
@@ -202,8 +202,8 @@ Response:
     "time":
 }
 ```
-####url: host:5000/api/user/post_praise(点赞）
-#####methods:"POST"
+#### url: host:5000/api/user/post_praise(点赞）
+##### methods:"POST"
 Request:
 ```
 {
@@ -219,8 +219,8 @@ Response:
     "message":"success"/"fail"
 }
 ```
-####url: host:5000/api/upload/card_image(上传卡片的图片）
-#####methods:"POST"
+#### url: host:5000/api/upload/card_image(上传卡片的图片）
+##### methods:"POST"
 Request:
 ```
 {
@@ -235,8 +235,8 @@ Response:
     "filename":
 }
 ```
-####url: host:5000/user/get_timeline/(时间轴内容）
-#####methods:"GET"
+#### url: host:5000/user/get_timeline/(时间轴内容）
+##### methods:"GET"
 Response:
 ```
 {
@@ -275,8 +275,8 @@ Response:
     ]
 }
 ```
-####url: host:5000/user/get_circle_of_friends(获取朋友圈内容)
-#####methods:"GET"
+#### url: host:5000/user/get_circle_of_friends(获取朋友圈内容)
+##### methods:"GET"
 Response:
 ```
 {
@@ -305,8 +305,8 @@ Response:
     ]
 }
 ```
-####url: host:5000/card/(卡片详情)
-#####methods:"GET"
+#### url: host:5000/card/(卡片详情)
+##### methods:"GET"
 Response:
 ```
 {
@@ -342,8 +342,8 @@ Response:
     ]
 }
 ```
-####url: host:5000/get_hot
-#####methods:"GET"
+#### url: host:5000/get_hot
+##### methods:"GET"
 Response:
 ```
 {
@@ -372,15 +372,15 @@ Response:
     ]
 }
 ```
-####url: host:5000/get_cards
-#####methods:"GET"
+#### url: host:5000/get_cards
+##### methods:"GET"
 Response:
 ```
 {
 }
 ```
-####url: host:5000/user/focus/
-#####methods:"GET"
+#### url: host:5000/user/focus/
+##### methods:"GET"
 Request:
 ```
 {
@@ -396,8 +396,8 @@ Response:
     "message":"关注成功"/"取消关注成功"
 }
 ```    
-####url: host:5000/user/get_followers
-#####methods:"GET"
+#### url: host:5000/user/get_followers
+##### methods:"GET"
 Response:
 ```
 {
@@ -414,8 +414,8 @@ Response:
     ]
 }
 ```
-####url: host:5000/user/get_followings
-#####methods:"GET"
+#### url: host:5000/user/get_followings
+##### methods:"GET"
 Response:
 ```
 {
@@ -431,8 +431,9 @@ Response:
         }
     ]
 }
-####url: host:5000/user/profile_summary
-#####methods:"GET"
+```
+#### url: host:5000/user/profile_summary
+##### methods:"GET"
 Request:
 ```
 {
@@ -454,8 +455,8 @@ Response:
     }
 }
 ```
-####url: host:5000/user/profile
-#####methods:"GET"
+#### url: host:5000/user/profile
+##### methods:"GET"
 Request:
 ```
 {
@@ -471,8 +472,8 @@ Request:
     }
 }
 ```
-####url: host:5000/user/profile_other
-#####methods:"GET"
+#### url: host:5000/user/profile_other
+##### methods:"GET"
 Response:
 ```
 {
@@ -489,8 +490,8 @@ Response:
     }
 }
 ```
-####url: host:5000/user/pet/update
-#####methods:"POST"
+#### url: host:5000/user/pet/update
+##### methods:"POST"
 Request:
 ```
 {
@@ -513,8 +514,8 @@ Response:
     "message":"success"/"failed"
 }
 ```
-####url: host:5000/user/pet/create_pet
-#####methods:"POST"
+#### url: host:5000/user/pet/create_pet
+##### methods:"POST"
 Request:
 ```
 {
@@ -536,8 +537,8 @@ Response:
     id: Text
 }
 ```
-####url: host:5000/user/pet/detail
-#####methods:"GET"
+#### url: host:5000/user/pet/detail
+##### methods:"GET"
 Request:
 ```
 {
