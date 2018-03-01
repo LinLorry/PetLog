@@ -2,8 +2,8 @@ import uuid
 import time
 from threading import Thread
 from flask import current_app
-from passlib.apps import custom_app_context as pwd_context
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from hashlib import md5
 from project import db
 from .Pet import Pet
 from .Tag import Tag
@@ -495,14 +495,15 @@ class User(db.Model):
     # 密码hash用"密码+用户名+salt"的方法来算
     @password.setter
     def password(self, password):
-        self.password_hash = pwd_context.encrypt(
-            password + current_app.config['SALT'] + self.id)
+        m = md5()
+        m.update((password + current_app.config['SALT'] + self.id).encode('utf-8'))
+        self.password_hash = m.hexdigest()
 
     # 校验密码方法
     def verify_password(self, password):
-        return pwd_context.verify(
-            password + current_app.config['SALT'] + self.id,
-            self.password_hash)
+        m = md5()
+        m.update((password + current_app.config['SALT'] + self.id).encode('utf-8'))
+        return m.hexdigest() == self.password_hash
 
     # --------------------------->用户属性部分结束
 

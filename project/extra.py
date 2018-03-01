@@ -44,17 +44,6 @@ def checke_interface(func):
 def login_required(func):
     @wraps(func)
     def inner(*args, **kwargs):
-        '''def verify_auth_token(token):
-            s = Serializer(current_app.config['SECRET_KEY'])
-            try:
-                data = s.loads(token)
-            except SignatureExpired:
-                return False # valid token, but expired
-            except BadSignature:
-                return False # invalid token
-            g.user = User.query.get(data['id'])
-            return True'''
-
         token = request.headers.get("Authorization")
 
         if not token:
