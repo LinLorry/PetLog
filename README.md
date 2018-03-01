@@ -1,4 +1,4 @@
-#PetLog  
+# PetLog  
 ### url为:host:5000/api/user/......  的接口需要验证登陆的请求,请求头上带上"Authorization":token\[:str\],过期时间为600s
 
 #### token过期会返回
