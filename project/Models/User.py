@@ -341,9 +341,9 @@ class User(db.Model):
         for comment in Comment.get_comments(card_id):
             author_ = User.query.get(comment.get_user_id())
             author__detail = {
-                "name": author_.get_nickname(),
-                "id": author_.get_id(),
-                "avatar": author_.get_avatar()
+                "name": author.get_nickname(),
+                "id": author.get_id(),
+                "avatar": author.get_avatar()
             }
             if comment.get_reply_id() == None:
                 pd = True
